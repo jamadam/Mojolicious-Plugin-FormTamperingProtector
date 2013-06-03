@@ -28,8 +28,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 ref $options->{action} ? @{$options->{action}} : $options->{action};
             
             if ($c->req->method eq 'POST' && grep($c->req->url->path, @actions)) {
-                my $token = $c->param("$token_key_prefix-token");
-                if (my $error = $self->tampered($c, $token)) {
+                if (my $error = $self->tampered($c, $token_key_prefix)) {
                     return $options->{blackhole}->($c, $error);
                 }
             }
@@ -62,24 +61,37 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     }
     
     sub tampered {
-        my ($self, $c, $token) = @_;
+        my ($self, $c, $token_key_prefix) = @_;
+        
+        my $token = $c->param("$token_key_prefix-token");
+
         if (! $token) {
             return 'Token not found';
         }
-        if (my $unsigned = $self->unsign($token)) {
-            my $digest = $json->decode($unsigned);
-            for my $name (@{$digest->{'names'}}) {
-                if (! defined($c->param($name))) {
-                    return "Form key $name not given";
-                }
-            }
-            for my $name (keys %{$digest->{'static'}}) {
-                if ($c->param($name) ne $digest->{'static'}->{$name}) {
-                    return "Hidden field $name has tampered";
-                }
-            }
-        } else {
+        
+        my $unsigned = $self->unsign($token);
+        
+        if (! $unsigned) {
             return 'Token has tampered';
+        }
+        
+        my $digest = $json->decode($unsigned);
+        my @form_names = grep {$_ ne "$token_key_prefix-token"} $c->param;
+        
+        for my $name (@form_names) {
+            if (! grep {$_ eq $name} @{$digest->{'names'}}) {
+                return "Form key $name is injected";
+            }
+        }
+        for my $name (@{$digest->{'names'}}) {
+            if (! grep {$_ eq $name} @form_names) {
+                return "Form key $name not given";
+            }
+        }
+        for my $name (keys %{$digest->{'static'}}) {
+            if ($c->param($name) ne $digest->{'static'}->{$name}) {
+                return "Hidden field $name has tampered";
+            }
         }
         return;
     }
