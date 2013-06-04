@@ -3,10 +3,13 @@ use strict;
 use warnings;
 use utf8;
 use Test::Mojo;
+use Mojo::JSON;
 use Mojolicious::Lite;
-use Test::More tests => 42;
+use Test::More tests => 49;
+use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
+my $json = Mojo::JSON->new;
 
 plugin form_tampering_protecter => {
 	token_key_prefix => $token_key_prefix,
@@ -34,6 +37,10 @@ get '/test1' => sub {
 		<form action="/receptor2">
 			<input type="text" name="foo" value="fooValue">
 		</form>
+		<form action="/receptor1">
+			<input type="checkbox" name="foo" value="fooValue1">
+			<input type="checkbox" name="foo" value="fooValue2">
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
@@ -55,13 +62,28 @@ $t->get_ok('/test1');
 $t->status_is(200);
 
 my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attrs('value');
-like $token, qr/\Q{"names":["foo","bar","baz"],"static":{"baz":"bazValue"}}\E--.+/;
+{
+	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token, app->secret);
+	my $digest = $json->decode($unsigned);
+	is_deeply {"names" => ["bar","baz","foo"],"static" => {"baz" => "bazValue"}}, $digest;
+}
 
 my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attrs('value');
-like $token2, qr/\Q{"names":["foo"],"static":{}}\E--.+/;
+{
+	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token2, app->secret);
+	my $digest = $json->decode($unsigned);
+	is_deeply {"names" => ["foo"],"static" => {}}, $digest;
+}
 
 my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$token_key_prefix-token]");
 is $token3, undef;
+
+my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_prefix-token]")->attrs('value');
+{
+	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token4, app->secret);
+	my $digest = $json->decode($unsigned);
+	is_deeply {"names" => ["foo"],"static" => {"foo" => ["fooValue1", "fooValue2"]}}, $digest;
+}
 
 $t->text_is("#jp", 'やったー');
 
@@ -153,6 +175,20 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{Token});
+$t->content_like(qr{tampered});
+
+$t->post_ok('/receptor1' => form => {
+	foo => 'fooValue1',
+	"$token_key_prefix-token" => $token4,
+});
+$t->status_is(200);
+
+$t->post_ok('/receptor1' => form => {
+	foo => 'fooValue5',
+	"$token_key_prefix-token" => $token4,
+});
+$t->status_is(400);
+$t->content_like(qr{foo});
 $t->content_like(qr{tampered});
 
 1;

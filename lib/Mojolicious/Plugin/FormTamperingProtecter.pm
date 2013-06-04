@@ -40,19 +40,34 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             for my $action (@actions) {
                 $dom->find("form[action=$action]")->each(sub {
                     my $form = shift;
-                    my $names = [];
+                    my $names = {};
                     my $static = {};
-                    my $targets = $form->find("*[name]")->each(sub {
+                    $form->find("*[name]")->each(sub {
                         my $tag = shift;
-                        if (! $tag->attrs('disabled')) {
-                            my $name = $tag->attrs('name');
-                            push(@$names, $name);
-                            if ($tag->attrs('type') eq 'hidden') {
+                        if ($tag->attrs('disabled')) {
+                            return;
+                        }
+                        my $name = $tag->attrs('name');
+                        $names->{$name}++;
+                        if (grep {$_ eq $tag->attrs('type')} @{['hidden', 'checkbox']}) {
+                            if ($static->{$name}) {
+                                if (ref $static->{$name}) {
+                                    push(@{$static->{$name}}, $tag->attrs('value'));
+                                } else {
+                                    $static->{$name} = [
+                                        $static->{$name},
+                                        $tag->attrs('value')
+                                    ];
+                                }
+                            } else {
                                 $static->{$name} = $tag->attrs('value');
                             }
                         }
                     });
-                    my $digest = $self->sign($json->encode({names => $names, static => $static}));
+                    my $digest = sign(
+                        $json->encode({names => [sort keys(%$names)], static => $static}
+                    ), $self->secret);
+                    
                     my $digest_html = xml_escape $digest;
                     $form->append_content(
                         qq!<input type="hidden" name="$token_key_prefix-token" value="$digest_html">!);
@@ -71,14 +86,14 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             return 'Token not found';
         }
         
-        my $unsigned = $self->unsign($token);
+        my $unsigned = unsign($token, $self->secret);
         
         if (! $unsigned) {
             return 'Token has tampered';
         }
         
         my $digest = $json->decode($unsigned);
-        my @form_names = grep {$_ ne "$token_key_prefix-token"} $c->param;
+        my @form_names = sort grep {$_ ne "$token_key_prefix-token"} $c->param;
         
         for my $name (@form_names) {
             if (! grep {$_ eq $name} @{$digest->{'names'}}) {
@@ -91,7 +106,9 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             }
         }
         for my $name (keys %{$digest->{'static'}}) {
-            if ($c->param($name) ne $digest->{'static'}->{$name}) {
+            my $candidates = $digest->{'static'}->{$name};
+            $candidates = (ref $candidates) ? $candidates : [$candidates];
+            if (!grep {$_ eq $c->param($name)} @$candidates) {
                 return "Hidden field $name has tampered";
             }
         }
@@ -99,15 +116,15 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     }
     
     sub sign {
-        my ($self, $value) = @_;
-        return "$value--" . hmac_sha1_sum($value, $self->secret);
+        my ($value, $secret) = @_;
+        return "$value--" . hmac_sha1_sum($value, $secret);
     }
     
     sub unsign {
-        my ($self, $signed) = @_;
+        my ($signed, $secret) = @_;
         if ($signed =~ s/--([^\-]+)$//) {
             my $sig = $1;
-            if (secure_compare($sig, hmac_sha1_sum($signed, $self->secret))) {
+            if (secure_compare($sig, hmac_sha1_sum($signed, $secret))) {
                 return $signed;
             }
         }
