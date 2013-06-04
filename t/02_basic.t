@@ -5,7 +5,7 @@ use utf8;
 use Test::Mojo;
 use Mojo::JSON;
 use Mojolicious::Lite;
-use Test::More tests => 49;
+use Test::More tests => 54;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -40,6 +40,10 @@ get '/test1' => sub {
 		<form action="/receptor1">
 			<input type="radio" name="foo" value="fooValue1">
 			<input type="radio" name="foo" value="fooValue2">
+		</form>
+		<form action="/receptor1">
+			<input type="checkbox" name="foo1" value="foo1Value">
+			<input type="checkbox" name="foo2" value="foo2Value">
 		</form>
 		<span id="jp">やったー</span>
 	</body>
@@ -83,6 +87,13 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_pref
 	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token4, app->secret);
 	my $digest = $json->decode($unsigned);
 	is_deeply {"names" => ["foo"],"static" => {"foo" => ["fooValue1", "fooValue2"]}}, $digest;
+}
+
+my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_prefix-token]")->attrs('value');
+{
+	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token5, app->secret);
+	my $digest = $json->decode($unsigned);
+	is_deeply {"names" => ["foo1", "foo2"],"static" => {"foo1" => ["foo1Value", ""], "foo2" => ["foo2Value", ""]}}, $digest;
 }
 
 $t->text_is("#jp", 'やったー');
@@ -190,6 +201,20 @@ $t->post_ok('/receptor1' => form => {
 $t->status_is(400);
 $t->content_like(qr{foo});
 $t->content_like(qr{tampered});
+
+$t->post_ok('/receptor1' => form => {
+	foo1 => 'foo1Value',
+	foo2 => 'foo2Value',
+	"$token_key_prefix-token" => $token5,
+});
+$t->status_is(200);
+
+$t->post_ok('/receptor1' => form => {
+	foo1 => '',
+	foo2 => '',
+	"$token_key_prefix-token" => $token5,
+});
+$t->status_is(200);
 
 1;
 

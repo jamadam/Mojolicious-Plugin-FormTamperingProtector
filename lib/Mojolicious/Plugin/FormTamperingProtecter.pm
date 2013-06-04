@@ -48,15 +48,17 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     }
     
     sub append_static {
-        my ($static, $name, $value) = @_;
-        if ($static->{$name}) {
-            if (ref $static->{$name}) {
-                push(@{$static->{$name}}, $value);
+        my ($static, $name, @values) = @_;
+        for my $value (@values) {
+            if ($static->{$name}) {
+                if (ref $static->{$name}) {
+                    push(@{$static->{$name}}, $value);
+                } else {
+                    $static->{$name} = [$static->{$name}, $value];
+                }
             } else {
-                $static->{$name} = [$static->{$name}, $value];
+                $static->{$name} = $value;
             }
-        } else {
-            $static->{$name} = $value;
         }
     }
     
@@ -71,7 +73,11 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             }
             my $name = $tag->attrs('name');
             $names->{$name}++;
-            if (grep {$_ eq $tag->attrs('type')} @{['hidden', 'radio']}) {
+            if ($tag->attrs('type') eq 'hidden') {
+                append_static($static, $name, $tag->attrs('value'));
+            } elsif ($tag->attrs('type') eq 'checkbox') {
+                append_static($static, $name, $tag->attrs('value'), '');
+            } elsif ($tag->attrs('type') eq 'radio') {
                 append_static($static, $name, $tag->attrs('value'));
             }
         });
