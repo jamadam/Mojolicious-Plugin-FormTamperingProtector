@@ -4,7 +4,7 @@ use warnings;
 use utf8;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 30;
+use Test::More tests => 35;
 
 my $token_key_prefix = 'form-tampering-protecter';
 
@@ -28,6 +28,12 @@ get '/test1' => sub {
 			<input type="hidden" name="baz" value="bazValue">
 			<input type="hidden" name="baz" value="bazValue" disabled="disabled">
 		</form>
+		<form action="/receptor1">
+			<input type="text" name="foo" value="fooValue">
+		</form>
+		<form action="/receptor2">
+			<input type="text" name="foo" value="fooValue">
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
@@ -38,13 +44,25 @@ post '/receptor1' => sub {
 	shift->render(text => 'post completed');
 };
 
+post '/receptor2' => sub {
+	shift->render(text => 'post completed');
+};
+
 my $t = Test::Mojo->new;
 my $dom;
 
 $t->get_ok('/test1');
 $t->status_is(200);
+
 my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attrs('value');
 like $token, qr/\Q{"names":["foo","bar","baz"],"static":{"baz":"bazValue"}}\E--.+/;
+
+my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attrs('value');
+like $token2, qr/\Q{"names":["foo"],"static":{}}\E--.+/;
+
+my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$token_key_prefix-token]");
+is $token3, undef;
+
 $t->text_is("#jp", 'やったー');
 
 $t->post_ok('/receptor1' => form => {
@@ -52,6 +70,13 @@ $t->post_ok('/receptor1' => form => {
 	bar => 'barValue',
 	baz => 'bazValue',
 	"$token_key_prefix-token" => $token,
+});
+$t->status_is(200);
+$t->content_is('post completed');
+
+$t->post_ok('/receptor2' => form => {
+	foo => 'fooValue',
+	bar => 'barValue',
 });
 $t->status_is(200);
 $t->content_is('post completed');

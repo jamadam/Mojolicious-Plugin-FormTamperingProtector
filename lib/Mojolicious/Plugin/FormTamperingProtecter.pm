@@ -27,7 +27,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             my @actions =
                 ref $options->{action} ? @{$options->{action}} : $options->{action};
             
-            if ($c->req->method eq 'POST' && grep($c->req->url->path, @actions)) {
+            if ($c->req->method eq 'POST' && grep {$_ eq $c->req->url->path} @actions) {
                 if (my $error = $self->tampered($c, $token_key_prefix)) {
                     return $options->{blackhole}->($c, $error);
                 }
