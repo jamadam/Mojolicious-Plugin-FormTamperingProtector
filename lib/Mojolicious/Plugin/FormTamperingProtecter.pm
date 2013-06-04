@@ -8,6 +8,7 @@ use Mojo::JSON;
 use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
 
     has 'secret';
+    has 'prefix';
     
     my $json = Mojo::JSON->new;
     
@@ -18,17 +19,16 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         my ($self, $app, $options) = @_;
         
         $self->secret($app->secret);
+        $self->prefix($options->{token_key_prefix});
         
         $app->hook('around_dispatch' => sub {
             (my $app, my $c) = @_;
-            
-            my $token_key_prefix = $options->{token_key_prefix};
             
             my @actions =
                 ref $options->{action} ? @{$options->{action}} : $options->{action};
             
             if ($c->req->method eq 'POST' && grep {$_ eq $c->req->url->path} @actions) {
-                if (my $error = $self->tampered($c, $token_key_prefix)) {
+                if (my $error = $self->tampered($c, $self->prefix)) {
                     return $options->{blackhole}->($c, $error);
                 }
             }
@@ -39,48 +39,53 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             
             for my $action (@actions) {
                 $dom->find("form[action=$action]")->each(sub {
-                    my $form = shift;
-                    my $names = {};
-                    my $static = {};
-                    $form->find("*[name]")->each(sub {
-                        my $tag = shift;
-                        if ($tag->attrs('disabled')) {
-                            return;
-                        }
-                        my $name = $tag->attrs('name');
-                        $names->{$name}++;
-                        if (grep {$_ eq $tag->attrs('type')} @{['hidden', 'radio']}) {
-                            if ($static->{$name}) {
-                                if (ref $static->{$name}) {
-                                    push(@{$static->{$name}}, $tag->attrs('value'));
-                                } else {
-                                    $static->{$name} = [
-                                        $static->{$name},
-                                        $tag->attrs('value')
-                                    ];
-                                }
-                            } else {
-                                $static->{$name} = $tag->attrs('value');
-                            }
-                        }
-                    });
-                    my $digest = sign(
-                        $json->encode({names => [sort keys(%$names)], static => $static}
-                    ), $self->secret);
-                    
-                    my $digest_html = xml_escape $digest;
-                    $form->append_content(
-                        qq!<input type="hidden" name="$token_key_prefix-token" value="$digest_html">!);
+                    $self->inject_token(shift, $self->prefix);
                 });
             }
+            
             $c->res->body(encode('UTF-8', $dom));
         });
     }
     
-    sub tampered {
-        my ($self, $c, $token_key_prefix) = @_;
+    sub inject_token {
+        my ($self, $form, $prefix) = @_;
+        my $names = {};
+        my $static = {};
+        $form->find("*[name]")->each(sub {
+            my $tag = shift;
+            if ($tag->attrs('disabled')) {
+                return;
+            }
+            my $name = $tag->attrs('name');
+            $names->{$name}++;
+            if (grep {$_ eq $tag->attrs('type')} @{['hidden', 'radio']}) {
+                if ($static->{$name}) {
+                    if (ref $static->{$name}) {
+                        push(@{$static->{$name}}, $tag->attrs('value'));
+                    } else {
+                        $static->{$name} = [
+                            $static->{$name},
+                            $tag->attrs('value')
+                        ];
+                    }
+                } else {
+                    $static->{$name} = $tag->attrs('value');
+                }
+            }
+        });
+        my $digest = sign(
+            $json->encode({names => [sort keys(%$names)], static => $static}
+        ), $self->secret);
         
-        my $token = $c->param("$token_key_prefix-token");
+        my $digest_html = xml_escape $digest;
+        $form->append_content(
+            qq!<input type="hidden" name="$prefix-token" value="$digest_html">!);
+    }
+    
+    sub tampered {
+        my ($self, $c, $prefix) = @_;
+        
+        my $token = $c->param("$prefix-token");
 
         if (! $token) {
             return 'Token not found';
@@ -93,7 +98,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         }
         
         my $digest = $json->decode($unsigned);
-        my @form_names = sort grep {$_ ne "$token_key_prefix-token"} $c->param;
+        my @form_names = sort grep {$_ ne "$prefix-token"} $c->param;
         
         for my $name (@form_names) {
             if (! grep {$_ eq $name} @{$digest->{'names'}}) {
