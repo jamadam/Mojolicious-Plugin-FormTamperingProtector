@@ -47,6 +47,19 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         });
     }
     
+    sub append_static {
+        my ($static, $name, $value) = @_;
+        if ($static->{$name}) {
+            if (ref $static->{$name}) {
+                push(@{$static->{$name}}, $value);
+            } else {
+                $static->{$name} = [$static->{$name}, $value];
+            }
+        } else {
+            $static->{$name} = $value;
+        }
+    }
+    
     sub inject_token {
         my ($self, $form, $prefix) = @_;
         my $names = {};
@@ -59,18 +72,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             my $name = $tag->attrs('name');
             $names->{$name}++;
             if (grep {$_ eq $tag->attrs('type')} @{['hidden', 'radio']}) {
-                if ($static->{$name}) {
-                    if (ref $static->{$name}) {
-                        push(@{$static->{$name}}, $tag->attrs('value'));
-                    } else {
-                        $static->{$name} = [
-                            $static->{$name},
-                            $tag->attrs('value')
-                        ];
-                    }
-                } else {
-                    $static->{$name} = $tag->attrs('value');
-                }
+                append_static($static, $name, $tag->attrs('value'));
             }
         });
         my $digest = sign(
