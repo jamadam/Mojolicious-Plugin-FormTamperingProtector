@@ -49,17 +49,15 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     
     sub append_static {
         my ($static, $name, @values) = @_;
+        if (! defined $static->{$name}) {
+            $static->{$name} = [];
+        }
         for my $value (@values) {
-            if ($static->{$name}) {
-                if (ref $static->{$name}) {
-                    push(@{$static->{$name}}, $value);
-                } else {
-                    $static->{$name} = [$static->{$name}, $value];
-                }
-            } else {
-                $static->{$name} = $value;
+            if (! contain($value, $static->{$name})) {
+                push(@{$static->{$name}}, $value);
             }
         }
+        $static->{$name} = [sort {($a || '') cmp ($b || '')} @{$static->{$name}}];
     }
     
     sub inject_token {
@@ -76,14 +74,18 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if ($tag->attrs('type') eq 'hidden') {
                 append_static($static, $name, $tag->attrs('value'));
             } elsif ($tag->attrs('type') eq 'checkbox') {
-                append_static($static, $name, $tag->attrs('value'), '');
+                append_static($static, $name, '', $tag->attrs('value'));
             } elsif ($tag->attrs('type') eq 'radio') {
-                append_static($static, $name, $tag->attrs('value'));
+                append_static($static, $name, undef, $tag->attrs('value'));
             }
         });
         my $digest = sign(
-            $json->encode({names => [sort keys(%$names)], static => $static}
-        ), $self->secret);
+            $json->encode({
+                names => [sort keys(%$names)],
+                static => $static
+            }),
+            $self->secret
+        );
         
         my $digest_html = xml_escape $digest;
         $form->append_content(
@@ -115,17 +117,30 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         }
         for my $name (@{$digest->{'names'}}) {
             if (! grep {$_ eq $name} @form_names) {
+                if ($digest->{'static'}->{$name} &&
+                        grep {! defined $_} @{$digest->{'static'}->{$name}}) {
+                    next;
+                }
                 return "Form key $name not given";
             }
         }
         for my $name (keys %{$digest->{'static'}}) {
             my $candidates = $digest->{'static'}->{$name};
-            $candidates = (ref $candidates) ? $candidates : [$candidates];
-            if (!grep {$_ eq $c->param($name)} @$candidates) {
-                return "Hidden field $name has tampered";
+            if (! contain(scalar $c->param($name), $candidates)) {
+                return "Field $name has tampered";
             }
         }
         return;
+    }
+    
+    sub contain {
+        my ($value, $array) = @_;
+        if (! defined $value && grep {! defined $_ } @$array) {
+            return 1;
+        }
+        if (grep {defined $_ && $_ eq $value} @$array) {
+            return 1;
+        }
     }
     
     sub sign {
