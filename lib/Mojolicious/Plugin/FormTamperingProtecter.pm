@@ -44,10 +44,12 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                     my $static = {};
                     my $targets = $form->find("*[name]")->each(sub {
                         my $tag = shift;
-                        my $name = $tag->attrs('name');
-                        push(@$names, $name);
-                        if ($tag->attrs('type') eq 'hidden') {
-                            $static->{$name} = $tag->attrs('value');
+                        if (! $tag->attrs('disabled')) {
+                            my $name = $tag->attrs('name');
+                            push(@$names, $name);
+                            if ($tag->attrs('type') eq 'hidden') {
+                                $static->{$name} = $tag->attrs('value');
+                            }
                         }
                     });
                     my $digest = $self->sign($json->encode({names => $names, static => $static}));

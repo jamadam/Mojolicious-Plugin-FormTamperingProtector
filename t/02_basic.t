@@ -26,6 +26,7 @@ get '/test1' => sub {
 			<input type="text" name="foo" value="fooValue">
 			<input type="text" name="bar" value="barValue">
 			<input type="hidden" name="baz" value="bazValue">
+			<input type="hidden" name="baz" value="bazValue" disabled="disabled">
 		</form>
 		<span id="jp">やったー</span>
 	</body>
