@@ -38,8 +38,8 @@ get '/test1' => sub {
 			<input type="text" name="foo" value="fooValue">
 		</form>
 		<form action="/receptor1">
-			<input type="checkbox" name="foo" value="fooValue1">
-			<input type="checkbox" name="foo" value="fooValue2">
+			<input type="radio" name="foo" value="fooValue1">
+			<input type="radio" name="foo" value="fooValue2">
 		</form>
 		<span id="jp">やったー</span>
 	</body>
