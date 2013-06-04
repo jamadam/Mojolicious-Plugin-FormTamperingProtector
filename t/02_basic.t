@@ -4,7 +4,7 @@ use warnings;
 use utf8;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 35;
+use Test::More tests => 42;
 
 my $token_key_prefix = 'form-tampering-protecter';
 
@@ -74,6 +74,13 @@ $t->post_ok('/receptor1' => form => {
 $t->status_is(200);
 $t->content_is('post completed');
 
+$t->post_ok('/receptor1' => form => {
+	foo => 'fooValue',
+	"$token_key_prefix-token" => $token2,
+});
+$t->status_is(200);
+$t->content_is('post completed');
+
 $t->post_ok('/receptor2' => form => {
 	foo => 'fooValue',
 	bar => 'barValue',
@@ -90,6 +97,15 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{biz});
+$t->content_like(qr{injected});
+
+$t->post_ok('/receptor1' => form => {
+	foo => 'fooValue',
+	bar => 'barValue',
+	"$token_key_prefix-token" => $token2,
+});
+$t->status_is(400);
+$t->content_like(qr{bar});
 $t->content_like(qr{injected});
 
 $t->post_ok('/receptor1' => form => {
