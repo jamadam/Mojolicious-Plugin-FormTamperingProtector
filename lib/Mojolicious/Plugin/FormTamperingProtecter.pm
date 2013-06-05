@@ -57,7 +57,6 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 push(@{$static->{$name}}, $value);
             }
         }
-        $static->{$name} = [sort {($a || '') cmp ($b || '')} @{$static->{$name}}];
     }
     
     sub inject_token {
@@ -70,7 +69,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 return;
             }
             my $name = $tag->attrs('name');
-            $names->{$name}++;
+            $names->{$name} ||= undef;
             if ($tag->attrs('type') eq 'hidden') {
                 append_static($static, $name, $tag->attrs('value'));
             } elsif ($tag->attrs('type') eq 'checkbox') {
@@ -81,7 +80,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         });
         my $digest = sign(
             $json->encode({
-                names => [sort keys(%$names)],
+                names => [keys(%$names)],
                 static => $static
             }),
             $self->secret
@@ -108,7 +107,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         }
         
         my $digest = $json->decode($unsigned);
-        my @form_names = sort grep {$_ ne "$prefix-token"} $c->param;
+        my @form_names = grep {$_ ne "$prefix-token"} $c->param;
         
         for my $name (@form_names) {
             if (! grep {$_ eq $name} @{$digest->{'names'}}) {
@@ -117,16 +116,13 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         }
         for my $name (@{$digest->{'names'}}) {
             if (! grep {$_ eq $name} @form_names) {
-                if ($digest->{'static'}->{$name} &&
-                        grep {! defined $_} @{$digest->{'static'}->{$name}}) {
-                    next;
+                if (! contain(undef, $digest->{'static'}->{$name} || [])) {
+                    return "Form key $name not given";
                 }
-                return "Form key $name not given";
             }
         }
         for my $name (keys %{$digest->{'static'}}) {
-            my $candidates = $digest->{'static'}->{$name};
-            if (! contain(scalar $c->param($name), $candidates)) {
+            if (! contain(scalar $c->param($name), $digest->{'static'}->{$name})) {
                 return "Field $name has tampered";
             }
         }
@@ -148,7 +144,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     
     sub sign {
         my ($value, $secret) = @_;
-        return "$value--" . hmac_sha1_sum($value, $secret);
+        return $value. '--' . hmac_sha1_sum($value, $secret);
     }
     
     sub unsign {
