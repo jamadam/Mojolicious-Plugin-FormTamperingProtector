@@ -1,7 +1,4 @@
 package Template_Basic;
-use strict;
-use warnings;
-use utf8;
 use Test::Mojo;
 use Mojo::JSON;
 use Mojolicious::Lite;
@@ -21,34 +18,7 @@ plugin form_tampering_protecter => {
 };
 
 get '/test1' => sub {
-  my $self = shift;
-  $self->render(text => <<EOF);
-<html>
-	<body>
-		<form action="/receptor1">
-			<input type="text" name="foo" value="fooValue">
-			<input type="text" name="bar" value="barValue">
-			<input type="hidden" name="baz" value="bazValue">
-			<input type="hidden" name="baz" value="bazValue" disabled="disabled">
-		</form>
-		<form action="/receptor1">
-			<input type="text" name="foo" value="fooValue">
-		</form>
-		<form action="/receptor2">
-			<input type="text" name="foo" value="fooValue">
-		</form>
-		<form action="/receptor1">
-			<input type="radio" name="foo" value="fooValue1">
-			<input type="radio" name="foo" value="fooValue2">
-		</form>
-		<form action="/receptor1">
-			<input type="checkbox" name="foo1" value="foo1Value">
-			<input type="checkbox" name="foo2" value="foo2Value">
-		</form>
-		<span id="jp">やったー</span>
-	</body>
-</html>
-EOF
+	shift->render('test1');
 };
 
 post '/receptor1' => sub {
