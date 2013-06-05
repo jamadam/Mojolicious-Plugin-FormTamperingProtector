@@ -2,7 +2,7 @@ package Template_Basic;
 use Test::Mojo;
 use Mojo::JSON;
 use Mojolicious::Lite;
-use Test::More tests => 59;
+use Test::More tests => 60;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -68,6 +68,13 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_pref
 
 my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$token_key_prefix-token]");
 is $token6, undef;
+
+my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_prefix-token]")->attrs('value');
+{
+	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token7, app->secret);
+	my $digest = $json->decode($unsigned);
+	is_deeply $digest, {"names" => ["foo"],"static" => {"foo" => ['', undef, "fooValue1", "fooValue2"]}};
+}
 
 $t->text_is("#jp", 'やったー');
 

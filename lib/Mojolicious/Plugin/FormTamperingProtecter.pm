@@ -135,8 +135,11 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     
     sub contain {
         my ($value, $array) = @_;
-        if (! defined $value && grep {! defined $_ } @$array) {
-            return 1;
+        if (! defined $value) {
+            if (grep {! defined $_ } @$array) {
+                return 1;
+            }
+            return;
         }
         if (grep {defined $_ && $_ eq $value} @$array) {
             return 1;

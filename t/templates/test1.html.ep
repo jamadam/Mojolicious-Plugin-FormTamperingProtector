@@ -30,6 +30,12 @@
 			<input type="checkbox" name="foo2" value="foo2Value">
 			<input type="submit" value="send">
 		</form>
+		<form action="/receptor1" method="post">
+			<input type="hidden" name="foo" value="">
+			<input type="radio" name="foo" value="fooValue1">
+			<input type="radio" name="foo" value="fooValue2">
+			<input type="submit" value="send">
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
