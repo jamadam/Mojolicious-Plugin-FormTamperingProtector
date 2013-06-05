@@ -63,32 +63,27 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         my ($self, $form, $prefix) = @_;
         my $names = {};
         my $static = {};
-        $form->find("*[name]")->each(sub {
+        $form->find("*:not([disabled])[name]")->each(sub {
             my $tag = shift;
-            if ($tag->attrs('disabled')) {
-                return;
-            }
+            my $type = $tag->attrs('type');
             my $name = $tag->attrs('name');
             $names->{$name} ||= undef;
-            if ($tag->attrs('type') eq 'hidden') {
+            if ($type eq 'hidden') {
                 append_static($static, $name, $tag->attrs('value'));
-            } elsif ($tag->attrs('type') eq 'checkbox') {
+            } elsif ($type eq 'checkbox') {
                 append_static($static, $name, undef, $tag->attrs('value'));
-            } elsif ($tag->attrs('type') eq 'radio') {
+            } elsif ($type eq 'radio') {
                 append_static($static, $name, undef, $tag->attrs('value'));
             }
         });
         my $digest = sign(
-            $json->encode({
-                names => [keys(%$names)],
-                static => $static
-            }),
+            $json->encode({names => [keys(%$names)], static => $static}),
             $self->secret
         );
         
-        my $digest_html = xml_escape $digest;
         $form->append_content(
-            qq!<input type="hidden" name="$prefix-token" value="$digest_html">!);
+            sprintf(qq!<input type="hidden" name="%s-token" value="%s">!,
+                    $prefix, xml_escape $digest));
     }
     
     sub tampered {
@@ -97,13 +92,13 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         my $token = $c->param("$prefix-token");
 
         if (! $token) {
-            return 'Token not found';
+            return 'Token is not found';
         }
         
         my $unsigned = unsign($token, $self->secret);
         
         if (! $unsigned) {
-            return 'Token has tampered';
+            return 'Token has been tampered';
         }
         
         my $digest = $json->decode($unsigned);
@@ -111,19 +106,19 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         
         for my $name (@form_names) {
             if (! grep {$_ eq $name} @{$digest->{'names'}}) {
-                return "Form key $name is injected";
+                return "Field $name is injected";
             }
         }
         for my $name (@{$digest->{'names'}}) {
             if (! grep {$_ eq $name} @form_names) {
                 if (! contain(undef, $digest->{'static'}->{$name} || [])) {
-                    return "Form key $name not given";
+                    return "Field $name is not given";
                 }
             }
         }
         for my $name (keys %{$digest->{'static'}}) {
             if (! contain(scalar $c->param($name), $digest->{'static'}->{$name})) {
-                return "Field $name has tampered";
+                return "Field $name has been tampered";
             }
         }
         return;
