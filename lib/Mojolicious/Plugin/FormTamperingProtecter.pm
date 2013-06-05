@@ -74,7 +74,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if ($tag->attrs('type') eq 'hidden') {
                 append_static($static, $name, $tag->attrs('value'));
             } elsif ($tag->attrs('type') eq 'checkbox') {
-                append_static($static, $name, '', $tag->attrs('value'));
+                append_static($static, $name, undef, $tag->attrs('value'));
             } elsif ($tag->attrs('type') eq 'radio') {
                 append_static($static, $name, undef, $tag->attrs('value'));
             }
