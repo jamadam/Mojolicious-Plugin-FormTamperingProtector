@@ -38,11 +38,12 @@ $t->status_is(200);
 {
     no strict 'refs';
     *{__PACKAGE__. '::contain'} = \&Mojolicious::Plugin::FormTamperingProtecter::contain;
+    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormTamperingProtecter::unsign;
 }
 
 my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attrs('value');
 {
-	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token, app->secret);
+	my $unsigned = unsign($token, app->secret);
 	my $digest = $json->decode($unsigned);
 	# is_deeply $digest, {"names" => ["bar","baz","foo"],"static" => {"baz" => ["bazValue"]}};
 	is scalar @{$digest->{names}}, 3;
@@ -56,7 +57,7 @@ my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->at
 
 my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attrs('value');
 {
-	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token2, app->secret);
+	my $unsigned = unsign($token2, app->secret);
 	my $digest = $json->decode($unsigned);
 	#is_deeply $digest, {"names" => ["foo"],"static" => {}};
 	is scalar @{$digest->{names}}, 1;
@@ -69,7 +70,7 @@ is $token3, undef;
 
 my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_prefix-token]")->attrs('value');
 {
-	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token4, app->secret);
+	my $unsigned = unsign($token4, app->secret);
 	my $digest = $json->decode($unsigned);
 	#is_deeply $digest, {"names" => ["foo"],"static" => {"foo" => [undef, "fooValue1", "fooValue2"]}};
 	is scalar @{$digest->{names}}, 1;
@@ -81,7 +82,7 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_pref
 
 my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_prefix-token]")->attrs('value');
 {
-	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token5, app->secret);
+	my $unsigned = unsign($token5, app->secret);
 	my $digest = $json->decode($unsigned);
 	#is_deeply $digest, {"names" => ["foo1", "foo2"],"static" => {"foo1" => [undef, "foo1Value"], "foo2" => [undef, "foo2Value"]}};
 	is scalar @{$digest->{names}}, 2;
@@ -99,7 +100,7 @@ is $token6, undef;
 
 my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_prefix-token]")->attrs('value');
 {
-	my $unsigned = Mojolicious::Plugin::FormTamperingProtecter::unsign($token7, app->secret);
+	my $unsigned = unsign($token7, app->secret);
 	my $digest = $json->decode($unsigned);
 	#is_deeply $digest, {"names" => ["foo"],"static" => {"foo" => ['', undef, "fooValue1", "fooValue2"]}};
 	is scalar @{$digest->{names}}, 1;
