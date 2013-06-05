@@ -38,7 +38,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             my $dom = $c->res->dom;
             
             for my $action (@actions) {
-                $dom->find("form[action=$action]")->each(sub {
+                $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
                     $self->inject_token(shift, $self->prefix);
                 });
             }

@@ -1,24 +1,34 @@
 <html>
 	<body>
-		<form action="/receptor1">
+		<form action="/receptor1" method="post">
 			<input type="text" name="foo" value="fooValue">
 			<input type="text" name="bar" value="barValue">
 			<input type="hidden" name="baz" value="bazValue">
 			<input type="hidden" name="baz" value="bazValue" disabled="disabled">
+			<input type="submit" value="send">
 		</form>
-		<form action="/receptor1">
+		<form action="/receptor1" method="post">
 			<input type="text" name="foo" value="fooValue">
+			<input type="submit" value="send">
 		</form>
-		<form action="/receptor2">
+		<form action="/receptor2" method="post">
 			<input type="text" name="foo" value="fooValue">
+			<input type="submit" value="send">
 		</form>
-		<form action="/receptor1">
+		<form action="/receptor1" method="post">
 			<input type="radio" name="foo" value="fooValue1">
 			<input type="radio" name="foo" value="fooValue2">
+			<input type="submit" value="send">
+		</form>
+		<form action="/receptor1" method="post">
+			<input type="checkbox" name="foo1" value="foo1Value">
+			<input type="checkbox" name="foo2" value="foo2Value">
+			<input type="submit" value="send">
 		</form>
 		<form action="/receptor1">
 			<input type="checkbox" name="foo1" value="foo1Value">
 			<input type="checkbox" name="foo2" value="foo2Value">
+			<input type="submit" value="send">
 		</form>
 		<span id="jp">やったー</span>
 	</body>
