@@ -10,6 +10,10 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     has 'secret';
     has 'prefix';
     
+    my $DIGEST_INDEX_OPTIONS    = 0;
+    my $DIGEST_INDEX_ALLOW_NULL = 1;
+    my $DIGEST_INDEX_MAXLENGTH  = 2;
+    
     my $json = Mojo::JSON->new;
     
     ### ---
@@ -47,39 +51,23 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         });
     }
     
-    sub append_static {
-        my ($static, $name, @values) = @_;
-        if (! defined $static->{$name}) {
-            $static->{$name} = [];
-        }
-        for my $value (@values) {
-            if (! contain($value, $static->{$name})) {
-                push(@{$static->{$name}}, $value);
-            }
-        }
-    }
-    
     sub inject_token {
         my ($self, $form, $prefix) = @_;
         my $names = {};
-        my $static = {};
         $form->find("*:not([disabled])[name]")->each(sub {
             my $tag = shift;
             my $type = $tag->attrs('type');
             my $name = $tag->attrs('name');
-            $names->{$name} ||= undef;
-            if ($type eq 'hidden') {
-                append_static($static, $name, $tag->attrs('value'));
-            } elsif ($type eq 'checkbox') {
-                append_static($static, $name, undef, $tag->attrs('value'));
-            } elsif ($type eq 'radio') {
-                append_static($static, $name, undef, $tag->attrs('value'));
+            $names->{$name} ||= [];
+            if (grep {$_ eq $type} qw{hidden checkbox radio}) {
+                push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $tag->attrs('value'));
+            }
+            if (grep {$_ eq $type} qw{checkbox radio}) {
+                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 1;
             }
         });
-        my $digest = sign(
-            $json->encode({names => [keys(%$names)], static => $static}),
-            $self->secret
-        );
+        
+        my $digest = sign($json->encode($names), $self->secret);
         
         $form->append_content(
             sprintf(qq!<input type="hidden" name="%s-token" value="%s">!,
@@ -105,36 +93,24 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         my @form_names = grep {$_ ne "$prefix-token"} $c->param;
         
         for my $name (@form_names) {
-            if (! grep {$_ eq $name} @{$digest->{'names'}}) {
+            if (! $digest->{$name}) {
                 return "Field $name is injected";
             }
         }
-        for my $name (@{$digest->{'names'}}) {
+        for my $name (keys %{$digest}) {
             if (! grep {$_ eq $name} @form_names) {
-                if (! contain(undef, $digest->{'static'}->{$name} || [])) {
+                if (! $digest->{$name}->[$DIGEST_INDEX_ALLOW_NULL]) {
                     return "Field $name is not given";
                 }
             }
-        }
-        for my $name (keys %{$digest->{'static'}}) {
-            if (! contain(scalar $c->param($name), $digest->{'static'}->{$name})) {
-                return "Field $name has been tampered";
+            if (my $allowed = $digest->{$name}->[$DIGEST_INDEX_OPTIONS]) {
+                my $given = scalar $c->param($name);
+                if (defined $given && ! grep {$_ eq $given} @$allowed) {
+                    return "Field $name has been tampered";
+                }
             }
         }
         return;
-    }
-    
-    sub contain {
-        my ($value, $array) = @_;
-        if (! defined $value) {
-            if (grep {! defined $_ } @$array) {
-                return 1;
-            }
-            return;
-        }
-        if (grep {defined $_ && $_ eq $value} @$array) {
-            return 1;
-        }
     }
     
     sub sign {
