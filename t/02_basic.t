@@ -44,7 +44,7 @@ my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->at
 {
 	my $unsigned = unsign($token, app->secret);
 	my $digest = $json->decode($unsigned);
-	is_deeply $digest, {"bar"=>[],"baz"=>[["bazValue"]],"foo"=>[]};
+	is_deeply $digest, {"bar"=>[],"baz"=>[["bazValue"], 0],"foo"=>[]};
 }
 
 my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attrs('value');
@@ -78,7 +78,7 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_pref
 {
 	my $unsigned = unsign($token7, app->secret);
 	my $digest = $json->decode($unsigned);
-	is_deeply $digest, {foo => [['', "fooValue1", "fooValue2"], 1]};
+	is_deeply $digest, {foo => [['', "fooValue1", "fooValue2"], 0]};
 }
 
 my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_prefix-token]")->attrs('value');

@@ -63,8 +63,11 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if (grep {$_ eq $type} qw{hidden checkbox radio}) {
                 push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $tag->attrs('value'));
             }
+            if (grep {$_ eq $type} qw{hidden}) {
+                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
+            }
             if (grep {$_ eq $type} qw{checkbox radio}) {
-                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 1;
+                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
             }
             my $maxlength = $tag->attrs('maxlength');
             if ($maxlength =~ /./) {
