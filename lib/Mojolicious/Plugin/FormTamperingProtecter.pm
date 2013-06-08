@@ -65,6 +65,10 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if (grep {$_ eq $type} qw{checkbox radio}) {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 1;
             }
+            my $maxlength = $tag->attrs('maxlength');
+            if ($maxlength =~ /./) {
+                $names->{$name}->[$DIGEST_INDEX_MAXLENGTH] = $maxlength;
+            }
         });
         
         my $digest = sign($json->encode($names), $self->secret);
@@ -107,6 +111,13 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 my $given = scalar $c->param($name);
                 if (defined $given && ! grep {$_ eq $given} @$allowed) {
                     return "Field $name has been tampered";
+                }
+            }
+            my $maxlength = $digest->{$name}->[$DIGEST_INDEX_MAXLENGTH];
+            if (defined $maxlength) {
+                my $given_length = length(scalar $c->param($name));
+                if ($given_length > $maxlength) {
+                    return "Field $name is too long";
                 }
             }
         }

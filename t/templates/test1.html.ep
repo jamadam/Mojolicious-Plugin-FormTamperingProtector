@@ -36,6 +36,12 @@
 			<input type="radio" name="foo" value="fooValue2">
 			<input type="submit" value="send">
 		</form>
+		<form action="/receptor1" method="post">
+			<input type="text" name="foo1" value="" maxlength="32">
+			<input type="text" name="foo2" value="" maxlength="0">
+			<input type="text" name="foo3" value="">
+			<input type="submit" value="send">
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
