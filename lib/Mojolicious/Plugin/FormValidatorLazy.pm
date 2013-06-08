@@ -161,8 +161,36 @@ __END__
 Mojolicious::Plugin::FormValidatorLazy - FormValidatorLazy
 
 =head1 SYNOPSIS
-  
+
+    plugin form_validator_lazy => {
+        token_key_prefix => 'form_validator_lazy',
+        action => ['/receptor1'],
+        blackhole => sub {
+            $_[0]->res->code(400);
+            $_[0]->render(text => 'An error occured');
+        },
+    };
+
 =head1 DESCRIPTION
+
+B<This software is considered to be alpha quality and isn't recommended for
+regular usage.>
+
+Mojolicious::Plugin::FormValidatorLazy is a Mojolicious plugin for validating
+post data with auto-generated validation rules. The plugin generates validation
+rules based on DOM structure and catch the errors.
+
+The plugin detects following error for now.
+
+=item Unknown form fields.
+
+=item Unknown values of checkboxes or radio buttons.
+
+=item Hidden field tamperings.
+
+=item Form field omittion against require attributes.
+
+=item Values against maxlength attributes.
 
 =head2 OPTIONS
 
