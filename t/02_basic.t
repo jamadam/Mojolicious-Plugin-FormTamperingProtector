@@ -2,7 +2,7 @@ package Template_Basic;
 use Test::Mojo;
 use Mojo::JSON;
 use Mojolicious::Lite;
-use Test::More tests => 67;
+use Test::More tests => 72;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -86,6 +86,13 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_pref
 	my $unsigned = unsign($token8, app->secret);
 	my $digest = $json->decode($unsigned);
 	is_deeply $digest, {foo1 => [undef, undef, 32],foo2 => [undef, undef, 0],foo3 => []};
+}
+
+my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_prefix-token]")->attrs('value');
+{
+	my $unsigned = unsign($token9, app->secret);
+	my $digest = $json->decode($unsigned);
+	is_deeply $digest, {foo1 => [undef, undef, undef, 1]};
 }
 
 $t->text_is("#jp", 'やったー');
@@ -240,6 +247,18 @@ $t->post_ok('/receptor1' => form => {
 	"$token_key_prefix-token" => $token8,
 });
 $t->status_is(400);
+
+$t->post_ok('/receptor1' => form => {
+	foo1 => '',
+	"$token_key_prefix-token" => $token9,
+});
+$t->status_is(400);
+
+$t->post_ok('/receptor1' => form => {
+	foo1 => '1',
+	"$token_key_prefix-token" => $token9,
+});
+$t->status_is(200);
 
 1;
 

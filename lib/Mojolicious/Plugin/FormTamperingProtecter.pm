@@ -13,6 +13,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     my $DIGEST_INDEX_OPTIONS    = 0;
     my $DIGEST_INDEX_ALLOW_NULL = 1;
     my $DIGEST_INDEX_MAXLENGTH  = 2;
+    my $DIGEST_INDEX_REQUIRED   = 3;
     
     my $json = Mojo::JSON->new;
     
@@ -69,6 +70,9 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if ($maxlength =~ /./) {
                 $names->{$name}->[$DIGEST_INDEX_MAXLENGTH] = $maxlength;
             }
+            if (grep {$_ eq 'required'} keys %{$tag->attrs}) {
+                $names->{$name}->[$DIGEST_INDEX_REQUIRED] = 1;
+            }
         });
         
         my $digest = sign($json->encode($names), $self->secret);
@@ -118,6 +122,12 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 my $given_length = length(scalar $c->param($name));
                 if ($given_length > $maxlength) {
                     return "Field $name is too long";
+                }
+            }
+            if (defined $digest->{$name}->[$DIGEST_INDEX_REQUIRED]) {
+                my $given = scalar $c->param($name);
+                if (! $given || length($given) == 0) {
+                    return "Field $name cannot be empty";
                 }
             }
         }

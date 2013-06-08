@@ -42,6 +42,10 @@
 			<input type="text" name="foo3" value="">
 			<input type="submit" value="send">
 		</form>
+		<form action="/receptor1" method="post">
+			<input type="text" name="foo1" value="" required>
+			<input type="submit" value="send">
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
