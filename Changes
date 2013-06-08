@@ -1,4 +1,4 @@
-Revision history for Mojolicious::Plugin::FormTamperingProtecter
+Revision history for Mojolicious::Plugin::FormValidatorLazy
 
 0.01 2013/06/03
   - initial release

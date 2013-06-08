@@ -8,7 +8,7 @@ use Data::Dumper;
 my $token_key_prefix = 'form-tampering-protecter';
 my $json = Mojo::JSON->new;
 
-plugin form_tampering_protecter => {
+plugin form_validator_lazy => {
 	token_key_prefix => $token_key_prefix,
 	action => '/receptor1',
 	blackhole => sub {
@@ -37,7 +37,7 @@ $t->status_is(200);
 
 {
     no strict 'refs';
-    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormTamperingProtecter::unsign;
+    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormValidatorLazy::unsign;
 }
 
 my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attrs('value');

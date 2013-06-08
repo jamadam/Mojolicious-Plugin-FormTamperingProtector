@@ -3,10 +3,10 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %params = (
-    NAME          => 'Mojolicious::Plugin::FormTamperingProtecter',
+    NAME          => 'Mojolicious::Plugin::FormValidatorLazy',
     AUTHOR        => 'Sugama Keita <sugama@jamadam.com>',
-    VERSION_FROM  => 'lib/Mojolicious/Plugin/FormTamperingProtecter.pm',
-    ABSTRACT_FROM => 'lib/Mojolicious/Plugin/FormTamperingProtecter.pm',
+    VERSION_FROM  => 'lib/Mojolicious/Plugin/FormValidatorLazy.pm',
+    ABSTRACT_FROM => 'lib/Mojolicious/Plugin/FormValidatorLazy.pm',
     LICENSE       => 'perl',
     PREREQ_PM     => {
     },
