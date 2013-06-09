@@ -63,7 +63,9 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if (grep {$_ eq $type} qw{hidden checkbox radio}) {
                 push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $tag->attrs('value'));
             }
-            if (grep {$_ eq $type} qw{checkbox radio}) {
+            if ($type eq 'checkbox') {
+                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
+            } elsif ($type eq 'radio' && ! exists $tag->attrs->{checked}) {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
             } else {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
@@ -72,7 +74,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if ($maxlength =~ /./) {
                 $names->{$name}->[$DIGEST_INDEX_MAXLENGTH] = $maxlength;
             }
-            if (grep {$_ eq 'required'} keys %{$tag->attrs}) {
+            if (exists $tag->attrs->{required}) {
                 $names->{$name}->[$DIGEST_INDEX_REQUIRED] = 1;
             }
         });
