@@ -33,7 +33,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 ref $options->{action} ? @{$options->{action}} : $options->{action};
             
             if ($c->req->method eq 'POST' && grep {$_ eq $c->req->url->path} @actions) {
-                if (my $error = $self->tampered($c, $self->prefix)) {
+                if (my $error = $self->validate_form($c, $self->prefix)) {
                     return $options->{blackhole}->($c, $error);
                 }
             }
@@ -44,7 +44,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             
             for my $action (@actions) {
                 $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
-                    $self->inject_token(shift, $self->prefix);
+                    $self->inject_digest(shift, $self->prefix);
                 });
             }
             
@@ -52,7 +52,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         });
     }
     
-    sub inject_token {
+    sub inject_digest {
         my ($self, $form, $prefix) = @_;
         my $names = {};
         $form->find("*:not([disabled])[name]")->each(sub {
@@ -60,9 +60,11 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             my $type = $tag->attrs('type');
             my $name = $tag->attrs('name');
             $names->{$name} ||= [];
+            
             if (grep {$_ eq $type} qw{hidden checkbox radio}) {
                 push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $tag->attrs('value'));
             }
+            
             if ($type eq 'checkbox') {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
             } elsif ($type eq 'radio' && ! exists $tag->attrs->{checked}) {
@@ -75,11 +77,12 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 });
             } else {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
+                my $maxlength = $tag->attrs('maxlength');
+                if ($maxlength =~ /./) {
+                    $names->{$name}->[$DIGEST_INDEX_MAXLENGTH] = $maxlength;
+                }
             }
-            my $maxlength = $tag->attrs('maxlength');
-            if ($maxlength =~ /./) {
-                $names->{$name}->[$DIGEST_INDEX_MAXLENGTH] = $maxlength;
-            }
+            
             if (exists $tag->attrs->{required}) {
                 $names->{$name}->[$DIGEST_INDEX_REQUIRED] = 1;
             }
@@ -95,7 +98,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
 EOF
     }
     
-    sub tampered {
+    sub validate_form {
         my ($self, $c, $prefix) = @_;
         
         my $token = $c->param("$prefix-token");
