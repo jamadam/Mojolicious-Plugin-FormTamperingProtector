@@ -10,10 +10,10 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     has 'secret';
     has 'prefix';
     
-    my $DIGEST_INDEX_OPTIONS    = 0;
-    my $DIGEST_INDEX_ALLOW_NULL = 1;
-    my $DIGEST_INDEX_MAXLENGTH  = 2;
-    my $DIGEST_INDEX_REQUIRED   = 3;
+    my $DIGEST_INDEX_ALLOW_NULL = 0;
+    my $DIGEST_INDEX_MAXLENGTH  = 1;
+    my $DIGEST_INDEX_REQUIRED   = 2;
+    my $DIGEST_INDEX_OPTIONS    = 3;
     
     my $json = Mojo::JSON->new;
     
@@ -63,11 +63,10 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if (grep {$_ eq $type} qw{hidden checkbox radio}) {
                 push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $tag->attrs('value'));
             }
-            if (grep {$_ eq $type} qw{hidden}) {
-                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
-            }
             if (grep {$_ eq $type} qw{checkbox radio}) {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
+            } else {
+                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
             }
             my $maxlength = $tag->attrs('maxlength');
             if ($maxlength =~ /./) {
