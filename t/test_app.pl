@@ -7,7 +7,7 @@ my $token_key_prefix = 'form-tampering-protecter';
 
 app->secret('afewfweweuhu');
 
-plugin form_tampering_protecter => {
+plugin form_validator_lazy => {
 	token_key_prefix => $token_key_prefix,
 	action => '/receptor1',
 	blackhole => sub {
