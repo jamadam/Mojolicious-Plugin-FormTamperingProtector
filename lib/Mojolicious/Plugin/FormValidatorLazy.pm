@@ -82,8 +82,11 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         my $digest = sign($json->encode($names), $self->secret);
         
         $form->append_content(
-            sprintf(qq!<input type="hidden" name="%s-token" value="%s">!,
-                    $prefix, xml_escape $digest));
+            sprintf(<<"EOF", $prefix, xml_escape $digest));
+<div style="display:none">
+    <input type="hidden" name="%s-token" value="%s">
+</div>
+EOF
     }
     
     sub tampered {
