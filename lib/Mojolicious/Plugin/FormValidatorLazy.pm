@@ -67,6 +67,12 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
             } elsif ($type eq 'radio' && ! exists $tag->attrs->{checked}) {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
+            } elsif ($tag->type eq 'select') {
+                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
+                $tag->find('option')->each(sub {
+                    my $option = shift;
+                    push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $option->attrs('value'));
+                });
             } else {
                 $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
             }

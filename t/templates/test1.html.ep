@@ -72,6 +72,16 @@
 				<input type="submit" value="send">
 			</div>
 		</form>
+		<form action="/receptor1" method="post">
+			<div>
+				<select name="foo">
+					<option value="">a</option>
+					<option value="fooValue1">a</option>
+					<option value="fooValue2">b</option>
+				</select>
+				<input type="submit" value="send">
+			</div>
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
