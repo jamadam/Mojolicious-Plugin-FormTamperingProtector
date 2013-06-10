@@ -78,6 +78,8 @@
 					<option value="">a</option>
 					<option value="fooValue1">a</option>
 					<option value="fooValue2">b</option>
+					<option value="a&quot;b">b</option>
+					<option value="a/b">b</option>
 				</select>
 				<input type="submit" value="send">
 			</div>

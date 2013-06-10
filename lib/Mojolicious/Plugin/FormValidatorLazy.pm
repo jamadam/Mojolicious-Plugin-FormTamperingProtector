@@ -10,10 +10,10 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     has 'secret';
     has 'prefix';
     
-    my $DIGEST_INDEX_ALLOW_NULL = 0;
-    my $DIGEST_INDEX_MAXLENGTH  = 1;
-    my $DIGEST_INDEX_REQUIRED   = 2;
-    my $DIGEST_INDEX_OPTIONS    = 3;
+    my $DIGEST_KEY_ALLOW_NULL = 0;
+    my $DIGEST_KEY_MAXLENGTH  = 1;
+    my $DIGEST_KEY_REQUIRED   = 2;
+    my $DIGEST_KEY_OPTIONS    = 3;
     
     my $json = Mojo::JSON->new;
     
@@ -59,36 +59,41 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             my $tag = shift;
             my $type = $tag->attrs('type');
             my $name = $tag->attrs('name');
-            $names->{$name} ||= [];
+            $names->{$name} ||= {};
             
             if (grep {$_ eq $type} qw{hidden checkbox radio}) {
-                push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $tag->attrs('value'));
+                push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, $tag->attrs('value'));
             }
             
             if ($type eq 'checkbox') {
-                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
+                $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
             } elsif ($type eq 'radio' && ! exists $tag->attrs->{checked}) {
-                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] //= 1;
+                $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
             } elsif ($tag->type eq 'select') {
-                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
+                $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
                 $tag->find('option')->each(sub {
-                    my $option = shift;
-                    push(@{$names->{$name}->[$DIGEST_INDEX_OPTIONS]}, $option->attrs('value'));
+                    push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, shift->attrs('value'));
                 });
             } else {
-                $names->{$name}->[$DIGEST_INDEX_ALLOW_NULL] = 0;
+                $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
                 my $maxlength = $tag->attrs('maxlength');
                 if ($maxlength =~ /./) {
-                    $names->{$name}->[$DIGEST_INDEX_MAXLENGTH] = $maxlength;
+                    $names->{$name}->{$DIGEST_KEY_MAXLENGTH} = $maxlength;
                 }
             }
             
             if (exists $tag->attrs->{required}) {
-                $names->{$name}->[$DIGEST_INDEX_REQUIRED] = 1;
+                $names->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
             }
         });
         
-        my $digest = sign($json->encode($names), $self->secret);
+        for my $elem (values %$names) {
+            if (! $elem->{$DIGEST_KEY_ALLOW_NULL}) {
+                delete $elem->{$DIGEST_KEY_ALLOW_NULL}
+            }
+        }
+        
+        my $digest = sign(digest_encode($names), $self->secret);
         
         $form->append_content(
             sprintf(<<"EOF", $prefix, xml_escape $digest));
@@ -113,7 +118,7 @@ EOF
             return 'Token has been tampered';
         }
         
-        my $digest = $json->decode($unsigned);
+        my $digest = digest_decode($unsigned);
         my @form_names = grep {$_ ne "$prefix-token"} $c->param;
         
         for my $name (@form_names) {
@@ -123,24 +128,23 @@ EOF
         }
         for my $name (keys %{$digest}) {
             if (! grep {$_ eq $name} @form_names) {
-                if (! $digest->{$name}->[$DIGEST_INDEX_ALLOW_NULL]) {
+                if (! $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL}) {
                     return "Field $name is not given";
                 }
             }
-            if (my $allowed = $digest->{$name}->[$DIGEST_INDEX_OPTIONS]) {
+            if (my $allowed = $digest->{$name}->{$DIGEST_KEY_OPTIONS}) {
                 my $given = scalar $c->param($name);
                 if (defined $given && ! grep {$_ eq $given} @$allowed) {
                     return "Field $name has been tampered";
                 }
             }
-            my $maxlength = $digest->{$name}->[$DIGEST_INDEX_MAXLENGTH];
-            if (defined $maxlength) {
-                my $given_length = length(scalar $c->param($name));
-                if ($given_length > $maxlength) {
+            if (exists $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
+                if (length(scalar $c->param($name)) >
+                                    $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
                     return "Field $name is too long";
                 }
             }
-            if (defined $digest->{$name}->[$DIGEST_INDEX_REQUIRED]) {
+            if (defined $digest->{$name}->{$DIGEST_KEY_REQUIRED}) {
                 my $given = scalar $c->param($name);
                 if (! $given || length($given) == 0) {
                     return "Field $name cannot be empty";
@@ -148,6 +152,20 @@ EOF
             }
         }
         return;
+    }
+    
+    sub digest_encode {
+        my $out = $json->encode(shift);
+        $out =~ s{/}{\\/}g;
+        $out =~ s{(?<!\\)"}{/}g;
+        return $out;
+    }
+    
+    sub digest_decode {
+        my $in = shift;
+        $in =~ s{(?<!\\)/}{"}g;
+        $in =~ s{\\/}{/}g;
+        return $json->decode($in);
     }
     
     sub sign {
