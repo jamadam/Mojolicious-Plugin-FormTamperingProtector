@@ -15,6 +15,9 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     my $DIGEST_KEY_REQUIRED   = 2;
     my $DIGEST_KEY_OPTIONS    = 3;
     my $DIGEST_KEY_PATTERN    = 4;
+    my $DIGEST_KEY_MIN        = 5;
+    my $DIGEST_KEY_MAX        = 6;
+    my $DIGEST_KEY_TYPE       = 7;
     
     my $json = Mojo::JSON->new;
     
@@ -75,6 +78,14 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                 $tag->find('option')->each(sub {
                     push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, shift->attrs('value'));
                 });
+            } elsif ($type eq 'number') {
+                $names->{$name}->{$DIGEST_KEY_TYPE} = 'number';
+                if (my $val = $tag->attrs->{min}) {
+                    $names->{$name}->{$DIGEST_KEY_MIN} = $val;
+                }
+                if (my $val = $tag->attrs->{max}) {
+                    $names->{$name}->{$DIGEST_KEY_MAX} = $val;
+                }
             } else {
                 $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
                 my $maxlength = $tag->attrs('maxlength');
@@ -82,12 +93,11 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
                     $names->{$name}->{$DIGEST_KEY_MAXLENGTH} = $maxlength;
                 }
             }
-            
             if (exists $tag->attrs->{required}) {
                 $names->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
             }
-            if (my $pattern = $tag->attrs->{pattern}) {
-                $names->{$name}->{$DIGEST_KEY_PATTERN} = $pattern;
+            if (my $val = $tag->attrs->{pattern}) {
+                $names->{$name}->{$DIGEST_KEY_PATTERN} = $val;
             }
         });
         
@@ -158,6 +168,25 @@ EOF
                 my $given = scalar $c->param($name);
                 if ($given !~ /\A$pattern\Z/) {
                     return "Field $name not match pattern";
+                }
+            }
+            if ($digest->{$name}->{$DIGEST_KEY_TYPE} &&
+                            $digest->{$name}->{$DIGEST_KEY_TYPE} eq 'number') {
+                my $given = scalar $c->param($name);
+                if ($given !~ /\A[\d\+\-\.]\Z/) {
+                    return "Field $name not match pattern";
+                }
+                if (my $min = $digest->{$name}->{$DIGEST_KEY_MIN}) {
+                    my $given = scalar $c->param($name);
+                    if ($given < $min) {
+                        return "Field $name too low";
+                    }
+                }
+                if (my $max = $digest->{$name}->{$DIGEST_KEY_MAX}) {
+                    my $given = scalar $c->param($name);
+                    if ($given > $max) {
+                        return "Field $name too great";
+                    }
                 }
             }
         }

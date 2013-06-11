@@ -90,6 +90,12 @@
  				<input type="submit" value="send">
 			</div>
 		</form>
+		<form action="/receptor1" method="post">
+			<div>
+				<input type="number" name="foo" value="" min="5" max="10">
+ 				<input type="submit" value="send">
+			</div>
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
