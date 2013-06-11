@@ -173,7 +173,7 @@ EOF
             if ($digest->{$name}->{$DIGEST_KEY_TYPE} &&
                             $digest->{$name}->{$DIGEST_KEY_TYPE} eq 'number') {
                 my $given = scalar $c->param($name);
-                if ($given !~ /\A[\d\+\-\.]\Z/) {
+                if ($given !~ /\A[\d\+\-\.]+\Z/) {
                     return "Field $name not match pattern";
                 }
                 if (my $min = $digest->{$name}->{$DIGEST_KEY_MIN}) {
