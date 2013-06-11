@@ -14,6 +14,7 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
     my $DIGEST_KEY_MAXLENGTH  = 1;
     my $DIGEST_KEY_REQUIRED   = 2;
     my $DIGEST_KEY_OPTIONS    = 3;
+    my $DIGEST_KEY_PATTERN    = 4;
     
     my $json = Mojo::JSON->new;
     
@@ -85,6 +86,9 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
             if (exists $tag->attrs->{required}) {
                 $names->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
             }
+            if (my $pattern = $tag->attrs->{pattern}) {
+                $names->{$name}->{$DIGEST_KEY_PATTERN} = $pattern;
+            }
         });
         
         for my $elem (values %$names) {
@@ -148,6 +152,12 @@ EOF
                 my $given = scalar $c->param($name);
                 if (! $given || length($given) == 0) {
                     return "Field $name cannot be empty";
+                }
+            }
+            if (my $pattern = $digest->{$name}->{$DIGEST_KEY_PATTERN}) {
+                my $given = scalar $c->param($name);
+                if ($given !~ /\A$pattern\Z/) {
+                    return "Field $name not match pattern";
                 }
             }
         }

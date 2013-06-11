@@ -84,6 +84,12 @@
 				<input type="submit" value="send">
 			</div>
 		</form>
+		<form action="/receptor1" method="post">
+			<div>
+				<input type="text" name="foo" value="" pattern="\d\d\d">
+ 				<input type="submit" value="send">
+			</div>
+		</form>
 		<span id="jp">やったー</span>
 	</body>
 </html>
