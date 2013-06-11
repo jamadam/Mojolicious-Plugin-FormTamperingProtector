@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 86;
+use Test::More tests => 93;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -27,17 +27,26 @@ post '/receptor2' => sub {
 	shift->render(text => 'post completed');
 };
 
+{
+    no strict 'refs';
+    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormValidatorLazy::unsign;
+    *{__PACKAGE__. '::digest_decode'} = \&Mojolicious::Plugin::FormValidatorLazy::digest_decode;
+    *{__PACKAGE__. '::digest_encode'} = \&Mojolicious::Plugin::FormValidatorLazy::digest_encode;
+}
+
+is_deeply digest_decode(digest_encode(["'"])), ["'"];
+is_deeply digest_decode(digest_encode(["/"])), ["/"];
+is_deeply digest_decode(digest_encode(["\/"])), ["\/"];
+is_deeply digest_decode(digest_encode(["\""])), ["\""];
+is_deeply digest_decode(digest_encode(["\\\""])), ["\\\""];
+is_deeply digest_decode(digest_encode(["\\\/"])), ["\\\/"];
+is_deeply digest_decode(digest_encode(["\/\/"])), ["\/\/"];
+
 my $t = Test::Mojo->new;
 my $dom;
 
 $t->get_ok('/test1');
 $t->status_is(200);
-
-{
-    no strict 'refs';
-    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormValidatorLazy::unsign;
-    *{__PACKAGE__. '::digest_decode'} = \&Mojolicious::Plugin::FormValidatorLazy::digest_decode;
-}
 
 my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attrs('value');
 {
