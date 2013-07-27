@@ -252,6 +252,8 @@ rules based on DOM structure and catch the errors.
 
 The plugin detects following error for now.
 
+=over
+
 =item Unknown form fields.
 
 =item Unknown values of checkboxes or radio buttons.
@@ -261,6 +263,8 @@ The plugin detects following error for now.
 =item Form field omittion against require attributes.
 
 =item Values against maxlength attributes.
+
+=back
 
 =head2 OPTIONS
 
