@@ -61,42 +61,42 @@ use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
         my $names = {};
         $form->find("*:not([disabled])[name]")->each(sub {
             my $tag = shift;
-            my $type = $tag->attrs('type');
-            my $name = $tag->attrs('name');
+            my $type = $tag->attr('type');
+            my $name = $tag->attr('name');
             $names->{$name} ||= {};
             
             if (grep {$_ eq $type} qw{hidden checkbox radio}) {
-                push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, $tag->attrs('value'));
+                push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, $tag->attr('value'));
             }
             
             if ($type eq 'checkbox') {
                 $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
-            } elsif ($type eq 'radio' && ! exists $tag->attrs->{checked}) {
+            } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
                 $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
             } elsif ($tag->type eq 'select') {
                 $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
                 $tag->find('option')->each(sub {
-                    push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, shift->attrs('value'));
+                    push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, shift->attr('value'));
                 });
             } elsif ($type eq 'number') {
                 $names->{$name}->{$DIGEST_KEY_TYPE} = 'number';
-                if (my $val = $tag->attrs->{min}) {
+                if (my $val = $tag->attr->{min}) {
                     $names->{$name}->{$DIGEST_KEY_MIN} = $val;
                 }
-                if (my $val = $tag->attrs->{max}) {
+                if (my $val = $tag->attr->{max}) {
                     $names->{$name}->{$DIGEST_KEY_MAX} = $val;
                 }
             } else {
                 $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
-                my $maxlength = $tag->attrs('maxlength');
+                my $maxlength = $tag->attr('maxlength');
                 if ($maxlength =~ /./) {
                     $names->{$name}->{$DIGEST_KEY_MAXLENGTH} = $maxlength;
                 }
             }
-            if (exists $tag->attrs->{required}) {
+            if (exists $tag->attr->{required}) {
                 $names->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
             }
-            if (my $val = $tag->attrs->{pattern}) {
+            if (my $val = $tag->attr->{pattern}) {
                 $names->{$name}->{$DIGEST_KEY_PATTERN} = $val;
             }
         });

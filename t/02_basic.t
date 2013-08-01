@@ -48,14 +48,14 @@ my $dom;
 $t->get_ok('/test1');
 $t->status_is(200);
 
-my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attrs('value');
+my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {"bar" => {},"baz" => {3 => ["bazValue"]}, foo => {}};
 }
 
-my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token2, app->secret);
 	my $digest = digest_decode($unsigned);
@@ -65,14 +65,14 @@ my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_pref
 my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$token_key_prefix-token]");
 is $token3, undef;
 
-my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token4, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {"foo" => {0 => 1, 3 => ["fooValue1", "fooValue2"]}};
 }
 
-my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token5, app->secret);
 	my $digest = digest_decode($unsigned);
@@ -82,49 +82,49 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_pref
 my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$token_key_prefix-token]");
 is $token6, undef;
 
-my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token7, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {foo => {3 => ['', "fooValue1", "fooValue2"]}};
 }
 
-my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token8, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {foo1 => {1 => 32}, foo2 => {1 => 0}, foo3 => {}};
 }
 
-my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token9, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {foo1 => {2 => 1}};
 }
 
-my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token10, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {foo => {3 => ['fooValue1', 'fooValue2', 'fooValue3']}};
 }
 
-my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token11, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {foo => {3 => ['', 'fooValue1', 'fooValue2', 'a"b', 'a/b']}};
 }
 
-my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token12, app->secret);
 	my $digest = digest_decode($unsigned);
 	is_deeply $digest, {foo => {4 => "\\d\\d\\d"}};
 }
 
-my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$token_key_prefix-token]")->attrs('value');
+my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
 	my $unsigned = unsign($token13, app->secret);
 	my $digest = digest_decode($unsigned);
