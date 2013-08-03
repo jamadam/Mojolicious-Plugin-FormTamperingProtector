@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 115;
+use Test::More tests => 119;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -241,6 +241,14 @@ $t->post_ok('/receptor1' => form => {
 	"$token_key_prefix-token" => $token4,
 });
 $t->status_is(200);
+
+$t->post_ok('/receptor1' => form => {
+	foo => ['fooValue1','invalid'],
+	"$token_key_prefix-token" => $token4,
+});
+$t->status_is(400);
+$t->content_like(qr{foo});
+$t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {
 	foo1 => 'foo1Value',

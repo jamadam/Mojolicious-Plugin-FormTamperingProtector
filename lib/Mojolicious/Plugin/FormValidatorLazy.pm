@@ -147,45 +147,50 @@ sub validate_form {
             }
         }
         if (my $allowed = $digest->{$name}->{$DIGEST_KEY_OPTIONS}) {
-            my $given = scalar $c->param($name);
-            if (defined $given && ! grep {$_ eq $given} @$allowed) {
-                return "Field $name has been tampered";
+            for my $given ($c->param($name)) {
+                if (defined $given && ! grep {$_ eq $given} @$allowed) {
+                    return "Field $name has been tampered";
+                }
             }
         }
         if (exists $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
-            if (length(scalar $c->param($name)) >
-                                $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
-                return "Field $name is too long";
+            for my $given ($c->param($name)) {
+                if (length($given) > $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
+                    return "Field $name is too long";
+                }
             }
         }
         if (defined $digest->{$name}->{$DIGEST_KEY_REQUIRED}) {
-            my $given = scalar $c->param($name);
-            if (! $given || length($given) == 0) {
-                return "Field $name cannot be empty";
+            for my $given ($c->param($name)) {
+                if (! $given || length($given) == 0) {
+                    return "Field $name cannot be empty";
+                }
             }
         }
         if (my $pattern = $digest->{$name}->{$DIGEST_KEY_PATTERN}) {
-            my $given = scalar $c->param($name);
-            if ($given !~ /\A$pattern\Z/) {
-                return "Field $name not match pattern";
+            for my $given ($c->param($name)) {
+                if ($given !~ /\A$pattern\Z/) {
+                    return "Field $name not match pattern";
+                }
             }
         }
         if ($digest->{$name}->{$DIGEST_KEY_TYPE} &&
                             $digest->{$name}->{$DIGEST_KEY_TYPE} eq 'number') {
-            my $given = scalar $c->param($name);
-            if ($given !~ /\A[\d\+\-\.]+\Z/) {
-                return "Field $name not match pattern";
-            }
-            if (my $min = $digest->{$name}->{$DIGEST_KEY_MIN}) {
-                my $given = scalar $c->param($name);
-                if ($given < $min) {
-                    return "Field $name too low";
+            for my $given ($c->param($name)) {
+                if ($given !~ /\A[\d\+\-\.]+\Z/) {
+                    return "Field $name not match pattern";
                 }
-            }
-            if (my $max = $digest->{$name}->{$DIGEST_KEY_MAX}) {
-                my $given = scalar $c->param($name);
-                if ($given > $max) {
-                    return "Field $name too great";
+                if (my $min = $digest->{$name}->{$DIGEST_KEY_MIN}) {
+                    my $given = scalar $c->param($name);
+                    if ($given < $min) {
+                        return "Field $name too low";
+                    }
+                }
+                if (my $max = $digest->{$name}->{$DIGEST_KEY_MAX}) {
+                    my $given = scalar $c->param($name);
+                    if ($given > $max) {
+                        return "Field $name too great";
+                    }
                 }
             }
         }
