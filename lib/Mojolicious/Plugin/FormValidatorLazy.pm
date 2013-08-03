@@ -58,59 +58,59 @@ sub register {
 
 sub inject_digest {
     my ($self, $form, $prefix) = @_;
-    my $names = {};
+    my $digest = {};
     
     $form->find("*:not([disabled])[name]")->each(sub {
         my $tag = shift;
         my $type = $tag->attr('type');
         my $name = $tag->attr('name');
-        $names->{$name} ||= {};
+        $digest->{$name} ||= {};
         
         if (grep {$_ eq $type} qw{hidden checkbox radio}) {
-            push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, $tag->attr('value'));
+            push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}}, $tag->attr('value'));
         }
         
         if ($type eq 'checkbox') {
-            $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
         } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
-            $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
         } elsif ($tag->type eq 'select') {
-            $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
+            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
             $tag->find('option')->each(sub {
-                push(@{$names->{$name}->{$DIGEST_KEY_OPTIONS}}, shift->attr('value'));
+                push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}}, shift->attr('value'));
             });
         } elsif ($type eq 'number') {
-            $names->{$name}->{$DIGEST_KEY_TYPE} = 'number';
+            $digest->{$name}->{$DIGEST_KEY_TYPE} = 'number';
             if (my $val = $tag->attr->{min}) {
-                $names->{$name}->{$DIGEST_KEY_MIN} = $val;
+                $digest->{$name}->{$DIGEST_KEY_MIN} = $val;
             }
             if (my $val = $tag->attr->{max}) {
-                $names->{$name}->{$DIGEST_KEY_MAX} = $val;
+                $digest->{$name}->{$DIGEST_KEY_MAX} = $val;
             }
         } else {
-            $names->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
+            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
             my $maxlength = $tag->attr('maxlength');
             if ($maxlength =~ /./) {
-                $names->{$name}->{$DIGEST_KEY_MAXLENGTH} = $maxlength;
+                $digest->{$name}->{$DIGEST_KEY_MAXLENGTH} = $maxlength;
             }
         }
         if (exists $tag->attr->{required}) {
-            $names->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
+            $digest->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
         }
         if (my $val = $tag->attr->{pattern}) {
-            $names->{$name}->{$DIGEST_KEY_PATTERN} = $val;
+            $digest->{$name}->{$DIGEST_KEY_PATTERN} = $val;
         }
     });
     
-    for my $elem (values %$names) {
+    for my $elem (values %$digest) {
         if (! $elem->{$DIGEST_KEY_ALLOW_NULL}) {
             delete $elem->{$DIGEST_KEY_ALLOW_NULL}
         }
     }
     
-    my $digest = sign(digest_encode($names), $self->secret);
+    my $signed = sign(digest_encode($digest), $self->secret);
     
-    $form->append_content(sprintf(<<"EOF", $prefix, xml_escape $digest));
+    $form->append_content(sprintf(<<"EOF", $prefix, xml_escape $signed));
 <div style="display:none">
     <input type="hidden" name="%s-token" value="%s">
 </div>
