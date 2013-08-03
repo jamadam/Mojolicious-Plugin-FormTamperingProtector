@@ -30,15 +30,15 @@
 		</form>
 		<form action="/receptor1" method="post">
 			<div>
-				<input type="checkbox" name="foo1" value="foo1Value">
-				<input type="checkbox" name="foo2" value="foo2Value">
+				<input type="checkbox" name="foo" value="fooValue1">
+				<input type="checkbox" name="foo" value="fooValue2">
 				<input type="submit" value="send">
 			</div>
 		</form>
 		<form action="/receptor1">
 			<div>
-				<input type="checkbox" name="foo1" value="foo1Value">
-				<input type="checkbox" name="foo2" value="foo2Value">
+				<input type="checkbox" name="foo" value="fooValue1">
+				<input type="checkbox" name="foo" value="fooValue2">
 				<input type="submit" value="send">
 			</div>
 		</form>

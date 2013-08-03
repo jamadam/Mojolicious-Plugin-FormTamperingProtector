@@ -76,7 +76,7 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_pref
 {
 	my $unsigned = unsign($token5, app->secret);
 	my $digest = digest_decode($unsigned);
-	is_deeply $digest, {foo1 => {0 => 1, 3 => ["foo1Value"]},foo2 => {0 => 1, 3 => ["foo2Value"]}};
+	is_deeply $digest, {foo => {0 => 1, 3 => ["fooValue1","fooValue2"]}};
 }
 
 my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$token_key_prefix-token]");
@@ -251,8 +251,7 @@ $t->content_like(qr{foo});
 $t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {
-	foo1 => 'foo1Value',
-	foo2 => 'foo2Value',
+	foo => ['fooValue1','fooValue2'],
 	"$token_key_prefix-token" => $token5,
 });
 $t->status_is(200);
@@ -263,7 +262,7 @@ $t->post_ok('/receptor1' => form => {
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
-	foo1 => '',
+	foo => '',
 	"$token_key_prefix-token" => $token5,
 });
 $t->status_is(400);
