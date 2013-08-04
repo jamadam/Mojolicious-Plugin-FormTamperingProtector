@@ -8,7 +8,6 @@ use Mojo::JSON;
 use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
 
 has 'secret';
-has 'prefix';
 
 my $DIGEST_KEY_ALLOW_NULL = 0;
 my $DIGEST_KEY_MAXLENGTH  = 1;
@@ -28,7 +27,7 @@ sub register {
     my ($self, $app, $options) = @_;
     
     $self->secret($app->secret);
-    $self->prefix($options->{token_key_prefix});
+    my $token_key = $options->{token_key_prefix}. "-token";
     
     $app->hook('around_dispatch' => sub {
         (my $app, my $c) = @_;
@@ -36,11 +35,14 @@ sub register {
         my @actions =
             ref $options->{action} ? @{$options->{action}} : $options->{action};
         
-        if ($c->req->method eq 'POST' && grep {$_ eq $c->req->url->path} @actions) {
-            if (my $error = $self->validate_form($c, $self->prefix)) {
+        my $req = $c->req;
+        
+        if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @actions) {
+            my $token = $c->param($token_key);
+            $req->params->remove($token_key);
+            if (my $error = $self->validate_form($c, $token)) {
                 return $options->{blackhole}->($c, $error);
             }
-            $c->tx->req->params->remove($self->prefix. '-token');
         }
         
         $app->();
@@ -50,7 +52,7 @@ sub register {
             
             for my $action (@actions) {
                 $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
-                    $self->inject_digest(shift, $self->prefix);
+                    $self->inject_digest(shift, $token_key);
                 });
             }
             
@@ -60,7 +62,7 @@ sub register {
 }
 
 sub inject_digest {
-    my ($self, $form, $prefix) = @_;
+    my ($self, $form, $token_key) = @_;
     my $digest = {};
     
     $form->find("*:not([disabled])[name]")->each(sub {
@@ -113,17 +115,15 @@ sub inject_digest {
     
     my $signed = sign(digest_encode($digest), $self->secret);
     
-    $form->append_content(sprintf(<<"EOF", $prefix, xml_escape $signed));
+    $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $signed));
 <div style="display:none">
-    <input type="hidden" name="%s-token" value="%s">
+    <input type="hidden" name="%s" value="%s">
 </div>
 EOF
 }
 
 sub validate_form {
-    my ($self, $c, $prefix) = @_;
-    
-    my $token = $c->param("$prefix-token");
+    my ($self, $c, $token) = @_;
 
     if (! $token) {
         return 'Token is not found';
@@ -136,15 +136,14 @@ sub validate_form {
     }
     
     my $digest = digest_decode($unsigned);
-    my @form_names = grep {$_ ne "$prefix-token"} $c->param;
     
-    for my $name (@form_names) {
+    for my $name ($c->param) {
         if (! $digest->{$name}) {
             return "Field $name is injected";
         }
     }
     for my $name (keys %{$digest}) {
-        if (! grep {$_ eq $name} @form_names) {
+        if (! grep {$_ eq $name} $c->param) {
             if (! $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL}) {
                 return "Field $name is not given";
             }
