@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 122;
+use Test::More tests => 136;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -20,7 +20,9 @@ get '/test1' => sub {
 };
 
 post '/receptor1' => sub {
-	shift->render(text => 'post completed');
+	my $c = shift;
+	is $c->tx->req->param($token_key_prefix. '-token'), undef, 'token is cleaned up';
+	$c->render(text => 'post completed');
 };
 
 post '/receptor2' => sub {

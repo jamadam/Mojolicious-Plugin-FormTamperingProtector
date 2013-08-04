@@ -40,6 +40,7 @@ sub register {
             if (my $error = $self->validate_form($c, $self->prefix)) {
                 return $options->{blackhole}->($c, $error);
             }
+            $c->tx->req->params->remove($self->prefix. '-token');
         }
         
         $app->();
