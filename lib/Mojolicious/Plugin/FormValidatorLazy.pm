@@ -44,15 +44,17 @@ sub register {
         
         $app->();
         
-        my $dom = $c->res->dom;
-        
-        for my $action (@actions) {
-            $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
-                $self->inject_digest(shift, $self->prefix);
-            });
+        if ($c->res->headers->content_type =~ qr{^text/html}) {
+            my $dom = $c->res->dom;
+            
+            for my $action (@actions) {
+                $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
+                    $self->inject_digest(shift, $self->prefix);
+                });
+            }
+            
+            $c->res->body(encode('UTF-8', $dom));
         }
-        
-        $c->res->body(encode('UTF-8', $dom));
     });
 }
 

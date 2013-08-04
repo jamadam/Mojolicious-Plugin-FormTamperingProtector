@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 119;
+use Test::More tests => 122;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -396,6 +396,10 @@ $t->post_ok('/receptor1' => form => {
 	"$token_key_prefix-token" => $token12,
 });
 $t->status_is(400);
+
+$t->get_ok('/test2.css');
+$t->status_is(200);
+$t->header_is('Content-Length', 151);
 
 1;
 
