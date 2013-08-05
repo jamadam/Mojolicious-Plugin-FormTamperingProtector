@@ -38,6 +38,23 @@ The plugin detects following error for now.
 
 =back
 
+=head2 CLASS METHODS
+
+=head3 inject_digest
+
+Generates a digest string of form structure and inject into itself.
+
+    $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
+        my $form = shift;
+        inject_digest($form, $token_key, $app->secret);
+    });
+
+=head3 validate_form
+
+Validates given form data by given digest.
+
+    my $error = validate_form($c->tx->req->params, $digest, $app->secret);
+
 =head2 OPTIONS
 
 =head1 AUTHOR
