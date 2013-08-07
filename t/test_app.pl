@@ -8,12 +8,12 @@ my $token_key_prefix = 'form-tampering-protecter';
 app->secret('afewfweweuhu');
 
 plugin form_validator_lazy => {
-	token_key_prefix => $token_key_prefix,
-	action => '/receptor1',
-	blackhole => sub {
-		$_[0]->res->code(400);
-		$_[0]->render(text => $_[1]);
-	},
+    token_key_prefix => $token_key_prefix,
+    action => '/receptor1',
+    blackhole => sub {
+        $_[0]->res->code(400);
+        $_[0]->render(text => $_[1]);
+    },
 };
 
 get '/test1' => sub {
@@ -21,11 +21,11 @@ get '/test1' => sub {
 };
 
 post '/receptor1' => sub {
-	shift->render(text => 'post completed');
+    shift->render(text => 'post completed');
 };
 
 post '/receptor2' => sub {
-	shift->render(text => 'post completed');
+    shift->render(text => 'post completed');
 };
 
 app->start;

@@ -1,101 +1,101 @@
 <html>
-	<body>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="text" name="foo" value="fooValue">
-				<input type="text" name="bar" value="barValue">
-				<input type="hidden" name="baz" value="bazValue">
-				<input type="hidden" name="baz" value="bazValue" disabled="disabled">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="text" name="foo" value="fooValue">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor2" method="post">
-			<div>
-				<input type="text" name="foo" value="fooValue">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="radio" name="foo" value="fooValue1">
-				<input type="radio" name="foo" value="fooValue2">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="checkbox" name="foo" value="fooValue1">
-				<input type="checkbox" name="foo" value="fooValue2">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1">
-			<div>
-				<input type="checkbox" name="foo" value="fooValue1">
-				<input type="checkbox" name="foo" value="fooValue2">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="hidden" name="foo" value="">
-				<input type="radio" name="foo" value="fooValue1">
-				<input type="radio" name="foo" value="fooValue2">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="text" name="foo1" value="" maxlength="32">
-				<input type="text" name="foo2" value="" maxlength="0">
-				<input type="text" name="foo3" value="">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="text" name="foo1" value="" required>
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="radio" name="foo" value="fooValue1">
-				<input type="radio" name="foo" value="fooValue2" checked>
-				<input type="radio" name="foo" value="fooValue3">
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<select name="foo">
-					<option value="">a</option>
-					<option value="fooValue1">a</option>
-					<option value="fooValue2">b</option>
-					<option value="a&quot;b">b</option>
-					<option value="a/b">b</option>
-				</select>
-				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="text" name="foo" value="" pattern="\d\d\d">
- 				<input type="submit" value="send">
-			</div>
-		</form>
-		<form action="/receptor1" method="post">
-			<div>
-				<input type="number" name="foo" value="" min="5" max="10">
- 				<input type="submit" value="send">
-			</div>
-		</form>
-		<span id="jp">やったー</span>
-	</body>
+    <body>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="text" name="foo" value="fooValue">
+                <input type="text" name="bar" value="barValue">
+                <input type="hidden" name="baz" value="bazValue">
+                <input type="hidden" name="baz" value="bazValue" disabled="disabled">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="text" name="foo" value="fooValue">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor2" method="post">
+            <div>
+                <input type="text" name="foo" value="fooValue">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="radio" name="foo" value="fooValue1">
+                <input type="radio" name="foo" value="fooValue2">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="checkbox" name="foo" value="fooValue1">
+                <input type="checkbox" name="foo" value="fooValue2">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1">
+            <div>
+                <input type="checkbox" name="foo" value="fooValue1">
+                <input type="checkbox" name="foo" value="fooValue2">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="hidden" name="foo" value="">
+                <input type="radio" name="foo" value="fooValue1">
+                <input type="radio" name="foo" value="fooValue2">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="text" name="foo1" value="" maxlength="32">
+                <input type="text" name="foo2" value="" maxlength="0">
+                <input type="text" name="foo3" value="">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="text" name="foo1" value="" required>
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="radio" name="foo" value="fooValue1">
+                <input type="radio" name="foo" value="fooValue2" checked>
+                <input type="radio" name="foo" value="fooValue3">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <select name="foo">
+                    <option value="">a</option>
+                    <option value="fooValue1">a</option>
+                    <option value="fooValue2">b</option>
+                    <option value="a&quot;b">b</option>
+                    <option value="a/b">b</option>
+                </select>
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="text" name="foo" value="" pattern="\d\d\d">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="number" name="foo" value="" min="5" max="10">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <span id="jp">やったー</span>
+    </body>
 </html>
