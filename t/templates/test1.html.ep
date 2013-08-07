@@ -96,6 +96,8 @@
                 <input type="submit" value="send">
             </div>
         </form>
+        <form action="/receptor3" method="post">
+        </form>
         <span id="jp">やったー</span>
     </body>
 </html>

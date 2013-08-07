@@ -1,14 +1,14 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 136;
+use Test::More tests => 142;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
 
 plugin form_validator_lazy => {
     token_key_prefix => $token_key_prefix,
-    action => '/receptor1',
+    action => ['/receptor1', '/receptor3'],
     blackhole => sub {
         $_[0]->res->code(400);
         $_[0]->render(text => $_[1]);
@@ -26,6 +26,10 @@ post '/receptor1' => sub {
 };
 
 post '/receptor2' => sub {
+    shift->render(text => 'post completed');
+};
+
+post '/receptor3' => sub {
     shift->render(text => 'post completed');
 };
 
@@ -54,14 +58,14 @@ my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->at
 {
     my $unsigned = unsign($token, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {"bar" => {},"baz" => {3 => ["bazValue"]}, foo => {}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {"bar" => {},"baz" => {3 => ["bazValue"]}, foo => {}}};
 }
 
 my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token2, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {"foo" => {}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {"foo" => {}}};
 }
 
 my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$token_key_prefix-token]");
@@ -71,14 +75,14 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_pref
 {
     my $unsigned = unsign($token4, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {"foo" => {0 => 1, 3 => ["fooValue1", "fooValue2"]}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {"foo" => {0 => 1, 3 => ["fooValue1", "fooValue2"]}}};
 }
 
 my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token5, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo => {0 => 1, 3 => ["fooValue1","fooValue2"]}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo => {0 => 1, 3 => ["fooValue1","fooValue2"]}}};
 }
 
 my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$token_key_prefix-token]");
@@ -88,49 +92,56 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_pref
 {
     my $unsigned = unsign($token7, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo => {3 => ['', "fooValue1", "fooValue2"]}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo => {3 => ['', "fooValue1", "fooValue2"]}}};
 }
 
 my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token8, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo1 => {1 => 32}, foo2 => {1 => 0}, foo3 => {}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo1 => {1 => 32}, foo2 => {1 => 0}, foo3 => {}}};
 }
 
 my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token9, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo1 => {2 => 1}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo1 => {2 => 1}}};
 }
 
 my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token10, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo => {3 => ['fooValue1', 'fooValue2', 'fooValue3']}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo => {3 => ['fooValue1', 'fooValue2', 'fooValue3']}}};
 }
 
 my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token11, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo => {3 => ['', 'fooValue1', 'fooValue2', 'a"b', 'a/b']}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo => {3 => ['', 'fooValue1', 'fooValue2', 'a"b', 'a/b']}}};
 }
 
 my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token12, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo => {4 => "\\d\\d\\d"}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo => {4 => "\\d\\d\\d"}}};
 }
 
 my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$token_key_prefix-token]")->attr('value');
 {
     my $unsigned = unsign($token13, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {foo => {5 => "5", 6 => "10", 7 => 'number'}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {foo => {5 => "5", 6 => "10", 7 => 'number'}}};
+}
+
+my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$token_key_prefix-token]")->attr('value');
+{
+    my $unsigned = unsign($token14, app->secret);
+    my $digest = digest_decode($unsigned);
+    is_deeply $digest, {1 => '/receptor3', 2 => {}};
 }
 
 $t->text_is("#jp", 'やったー');
@@ -398,6 +409,17 @@ $t->post_ok('/receptor1' => form => {
     "$token_key_prefix-token" => $token12,
 });
 $t->status_is(400);
+
+$t->post_ok('/receptor3' => form => {
+    "$token_key_prefix-token" => $token14,
+});
+$t->status_is(200);
+
+$t->post_ok('/receptor1' => form => {
+    "$token_key_prefix-token" => $token14,
+});
+$t->status_is(400);
+$t->content_like(qr{action attribute});
 
 $t->get_ok('/test2.css');
 $t->status_is(200);

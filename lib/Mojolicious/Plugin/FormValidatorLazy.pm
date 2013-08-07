@@ -15,6 +15,8 @@ my $DIGEST_KEY_PATTERN    = 4;
 my $DIGEST_KEY_MIN        = 5;
 my $DIGEST_KEY_MAX        = 6;
 my $DIGEST_KEY_TYPE       = 7;
+my $DIGEST_KEY2_ACTION     = 1;
+my $DIGEST_KEY2_DIGEST     = 2;
 
 my $json = Mojo::JSON->new;
 
@@ -110,13 +112,21 @@ sub inject_digest {
         }
     }
     
-    my $signed = sign(digest_encode($digest), $secret);
+    my $signed = sign(digest_encode({
+        $DIGEST_KEY2_ACTION => $form->attr('action'),
+        $DIGEST_KEY2_DIGEST => $digest,
+    }), $secret);
     
     $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $signed));
 <div style="display:none">
     <input type="hidden" name="%s" value="%s">
 </div>
 EOF
+}
+
+sub _is_action_path_valid {
+    # TODO IMPLEMENT
+    return 1;
 }
 
 sub validate_form {
@@ -132,7 +142,12 @@ sub validate_form {
         return 'Token has been tampered';
     }
     
-    my $digest = digest_decode($unsigned);
+    my $digest_wrapper = digest_decode($unsigned);
+    my $digest = $digest_wrapper->{$DIGEST_KEY2_DIGEST};
+    
+    if (! _is_action_path_valid($digest_wrapper->{$DIGEST_KEY2_ACTION})) {
+        return "Action attribute has been tampered";
+    }
     
     for my $name ($params->param) {
         if (! $digest->{$name}) {
