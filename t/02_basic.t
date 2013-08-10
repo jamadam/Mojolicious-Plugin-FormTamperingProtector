@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 142;
+use Test::More tests => 158;
 use Data::Dumper;
 
 my $token_key_prefix = 'form-tampering-protecter';
@@ -58,7 +58,13 @@ my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->at
 {
     my $unsigned = unsign($token, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {1 => '/receptor1', 2 => {"bar" => {},"baz" => {3 => ["bazValue"]}, foo => {}}};
+    is_deeply $digest, {1 => '/receptor1', 2 => {
+		bar => {},
+		baz => {3 => ["bazValue"]},
+		foo => {},
+		btn => {0 => 1, 3 => ["send", "send2"]},
+		btn3 => {0 => 1, 3 => ["send3"]}
+	}};
 }
 
 my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -154,6 +160,47 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(200);
 $t->content_is('post completed');
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    bar => 'barValue',
+    baz => 'bazValue',
+    btn => 'send',
+    "$token_key_prefix-token" => $token,
+});
+$t->status_is(200);
+$t->content_is('post completed');
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    bar => 'barValue',
+    baz => 'bazValue',
+    btn => 'send2',
+    "$token_key_prefix-token" => $token,
+});
+$t->status_is(200);
+$t->content_is('post completed');
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    bar => 'barValue',
+    baz => 'bazValue',
+    btn3 => 'send3',
+    "$token_key_prefix-token" => $token,
+});
+$t->status_is(200);
+$t->content_is('post completed');
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    bar => 'barValue',
+    baz => 'bazValue',
+    btn3 => 'tampered',
+    "$token_key_prefix-token" => $token,
+});
+$t->status_is(400);
+$t->content_like(qr{btn3});
+$t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',

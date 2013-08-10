@@ -70,11 +70,13 @@ sub inject_digest {
         my $name = $tag->attr('name');
         $digest->{$name} ||= {};
         
-        if (grep {$_ eq $type} qw{hidden checkbox radio}) {
+        if (grep {$_ eq $type} qw{hidden checkbox radio submit image}) {
             push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}}, $tag->attr('value'));
         }
         
-        if ($type eq 'checkbox') {
+        if ($type eq 'submit' || $type eq 'image') {
+            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+        } elsif ($type eq 'checkbox') {
             $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
         } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
             $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;

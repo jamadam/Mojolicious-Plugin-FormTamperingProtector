@@ -6,7 +6,9 @@
                 <input type="text" name="bar" value="barValue">
                 <input type="hidden" name="baz" value="bazValue">
                 <input type="hidden" name="baz" value="bazValue" disabled="disabled">
-                <input type="submit" value="send">
+                <input type="submit" name='btn' value="send">
+                <input type="submit" name='btn' value="send2">
+                <input type="submit" name='btn3' value="send3">
             </div>
         </form>
         <form action="/receptor1" method="post">
