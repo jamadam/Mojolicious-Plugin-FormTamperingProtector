@@ -419,7 +419,7 @@ $t->post_ok('/receptor1' => form => {
     "$token_key_prefix-token" => $token14,
 });
 $t->status_is(400);
-$t->content_like(qr{action attribute});
+$t->content_like(qr{Action attribute});
 
 $t->get_ok('/test2.css');
 $t->status_is(200);

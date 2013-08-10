@@ -39,7 +39,7 @@ sub register {
         if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @actions) {
             my $token = $c->param($token_key);
             $req->params->remove($token_key);
-            if (my $error = validate_form($c->tx->req->params, $token, $app->secret)) {
+            if (my $error = validate_form($c->tx->req->params, $token, $app->secret, $req->url->path)) {
                 return $options->{blackhole}->($c, $error);
             }
         }
@@ -130,7 +130,7 @@ sub _is_action_path_valid {
 }
 
 sub validate_form {
-    my ($params, $token, $secret) = @_;
+    my ($params, $token, $secret, $req_path) = @_;
 
     if (! $token) {
         return 'Token is not found';
@@ -145,7 +145,7 @@ sub validate_form {
     my $digest_wrapper = digest_decode($unsigned);
     my $digest = $digest_wrapper->{$DIGEST_KEY2_DIGEST};
     
-    if (! _is_action_path_valid($digest_wrapper->{$DIGEST_KEY2_ACTION})) {
+    if ($req_path ne $digest_wrapper->{$DIGEST_KEY2_ACTION}) {
         return "Action attribute has been tampered";
     }
     
