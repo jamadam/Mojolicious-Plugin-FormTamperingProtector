@@ -28,13 +28,27 @@ The plugin detects following error for now.
 
 =item Unknown form fields.
 
-=item Unknown values of checkboxes or radio buttons.
+The form fields represented by name attribute are all white listed and post data
+injected unknown fields are blocked.
+
+=item Unknown values of selectable fields.
+
+Selectable values of checkboxes, radio buttons and select options are white
+listed and unknow values are blocked. 
 
 =item Hidden field tamperings.
 
-=item Form field omittion against require attributes.
+Hidden typed input can't be ommited and the value takes only one option. the
+plugin blocks values against the rule.
 
 =item Values against maxlength attributes.
+
+Values violating of maxlength are blocked.
+
+=item HTML5 validation attributes
+
+HTML5 supports some validation attributes such as [required], [pattern=*],
+[type=number], [min=*], [max=*]. The plugin detects them and block violations.
 
 =back
 
@@ -42,18 +56,16 @@ The plugin detects following error for now.
 
 =head3 inject_digest
 
-Generates a digest string of form structure and inject into itself.
+Generates a digest strings of form structure for each forms in mojo response
+and inject them into itself.
 
-    $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
-        my $form = shift;
-        inject_digest($form, $token_key, $app->secret);
-    });
+    my $html = inject_digest($res, ['/path1', '/path2'], $token_key, $secret);
 
 =head3 validate_form
 
-Validates given form data by given digest.
+Validates form data of given mojo request by given digest.
 
-    my $error = validate_form($c->tx->req->params, $digest, $app->secret);
+    my $error = validate_form($creq, $digest, $secret);
 
 =head2 OPTIONS
 

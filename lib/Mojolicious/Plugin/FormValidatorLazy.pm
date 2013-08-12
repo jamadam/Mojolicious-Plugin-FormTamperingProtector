@@ -283,13 +283,27 @@ The plugin detects following error for now.
 
 =item Unknown form fields.
 
-=item Unknown values of checkboxes or radio buttons.
+The form fields represented by name attribute are all white listed and post data
+injected unknown fields are blocked.
+
+=item Unknown values of selectable fields.
+
+Selectable values of checkboxes, radio buttons and select options are white
+listed and unknow values are blocked. 
 
 =item Hidden field tamperings.
 
-=item Form field omittion against require attributes.
+Hidden typed input can't be ommited and the value takes only one option. the
+plugin blocks values against the rule.
 
 =item Values against maxlength attributes.
+
+Values violating of maxlength are blocked.
+
+=item HTML5 validation attributes
+
+HTML5 supports some validation attributes such as [required], [pattern=*],
+[type=number], [min=*], [max=*]. The plugin detects them and block violations.
 
 =back
 
