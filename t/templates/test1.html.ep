@@ -100,6 +100,22 @@
         </form>
         <form action="/receptor3" method="post">
         </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="text" name="foo" value="">
+                <input type="file" name="bar">
+                <input type="submit" value="send">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="hidden" name="foo" value="value1">
+                <select name="foo">
+                    <option value="value2">a</option>
+                </select>
+                <input type="submit" value="send">
+            </div>
+        </form>
         <span id="jp">やったー</span>
     </body>
 </html>
