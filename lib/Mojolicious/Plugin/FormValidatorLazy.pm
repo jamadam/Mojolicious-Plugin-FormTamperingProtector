@@ -39,7 +39,7 @@ sub register {
         if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @actions) {
             my $token = $c->param($token_key);
             $req->params->remove($token_key);
-            if (my $error = validate_form($c->tx->req->params, $token, $app->secret, $req->url->path)) {
+            if (my $error = validate_form($req, $token, $app->secret)) {
                 return $options->{blackhole}->($c, $error);
             }
         }
@@ -47,13 +47,8 @@ sub register {
         $next->();
         
         if ($c->res->headers->content_type =~ qr{^text/html}) {
-            my $dom = $c->res->dom;
             
-            for my $action (@actions) {
-                $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
-                    inject_digest(shift, $token_key, $app->secret);
-                });
-            }
+            my $dom = inject_digest($c->res, \@actions, $token_key, $app->secret);
             
             $c->res->body(encode('UTF-8', $dom));
         }
@@ -61,78 +56,89 @@ sub register {
 }
 
 sub inject_digest {
-    my ($form, $token_key, $secret) = @_;
-    my $digest = {};
+    my ($res, $actions, $token_key, $secret) = @_;
     
-    $form->find("*:not([disabled])[name]")->each(sub {
-        my $tag = shift;
-        my $type = $tag->attr('type');
-        my $name = $tag->attr('name');
-        $digest->{$name} ||= {};
-        
-        if (grep {$_ eq $type} qw{hidden checkbox radio submit image}) {
-            push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}}, $tag->attr('value'));
-        }
-        
-        if ($type eq 'submit' || $type eq 'image') {
-            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
-        } elsif ($type eq 'checkbox') {
-            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
-        } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
-            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
-        } elsif ($tag->type eq 'select') {
-            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
-            $tag->find('option')->each(sub {
-                push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}}, shift->attr('value'));
+    my $dom = $res->dom;
+    
+    for my $action (@$actions) {
+        $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
+            my $form = shift;
+            my $digest = {};
+            
+            $form->find("*:not([disabled])[name]")->each(sub {
+                my $tag = shift;
+                my $type = $tag->attr('type');
+                my $name = $tag->attr('name');
+                $digest->{$name} ||= {};
+                
+                if (grep {$_ eq $type} qw{hidden checkbox radio submit image}) {
+                    push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}},
+                                                        $tag->attr('value'));
+                }
+                
+                if ($type eq 'submit' || $type eq 'image') {
+                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+                } elsif ($type eq 'checkbox') {
+                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+                } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
+                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+                } elsif ($tag->type eq 'select') {
+                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
+                    $tag->find('option')->each(sub {
+                        push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}},
+                                                        shift->attr('value'));
+                    });
+                } elsif ($type eq 'number') {
+                    $digest->{$name}->{$DIGEST_KEY_TYPE} = 'number';
+                    if (my $val = $tag->attr->{min}) {
+                        $digest->{$name}->{$DIGEST_KEY_MIN} = $val;
+                    }
+                    if (my $val = $tag->attr->{max}) {
+                        $digest->{$name}->{$DIGEST_KEY_MAX} = $val;
+                    }
+                } else {
+                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
+                    my $maxlength = $tag->attr('maxlength');
+                    if ($maxlength =~ /./) {
+                        $digest->{$name}->{$DIGEST_KEY_MAXLENGTH} =
+                                                            $maxlength;
+                    }
+                }
+                if (exists $tag->attr->{required}) {
+                    $digest->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
+                }
+                if (my $val = $tag->attr->{pattern}) {
+                    $digest->{$name}->{$DIGEST_KEY_PATTERN} = $val;
+                }
             });
-        } elsif ($type eq 'number') {
-            $digest->{$name}->{$DIGEST_KEY_TYPE} = 'number';
-            if (my $val = $tag->attr->{min}) {
-                $digest->{$name}->{$DIGEST_KEY_MIN} = $val;
+            
+            for my $elem (values %$digest) {
+                if (! $elem->{$DIGEST_KEY_ALLOW_NULL}) {
+                    delete $elem->{$DIGEST_KEY_ALLOW_NULL}
+                }
             }
-            if (my $val = $tag->attr->{max}) {
-                $digest->{$name}->{$DIGEST_KEY_MAX} = $val;
-            }
-        } else {
-            $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
-            my $maxlength = $tag->attr('maxlength');
-            if ($maxlength =~ /./) {
-                $digest->{$name}->{$DIGEST_KEY_MAXLENGTH} = $maxlength;
-            }
-        }
-        if (exists $tag->attr->{required}) {
-            $digest->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
-        }
-        if (my $val = $tag->attr->{pattern}) {
-            $digest->{$name}->{$DIGEST_KEY_PATTERN} = $val;
-        }
-    });
-    
-    for my $elem (values %$digest) {
-        if (! $elem->{$DIGEST_KEY_ALLOW_NULL}) {
-            delete $elem->{$DIGEST_KEY_ALLOW_NULL}
-        }
-    }
-    
-    my $signed = sign(digest_encode({
-        $DIGEST_KEY2_ACTION => $form->attr('action'),
-        $DIGEST_KEY2_DIGEST => $digest,
-    }), $secret);
-    
-    $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $signed));
+            
+            my $signed = sign(digest_encode({
+                $DIGEST_KEY2_ACTION => $form->attr('action'),
+                $DIGEST_KEY2_DIGEST => $digest,
+            }), $secret);
+            
+            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $signed));
 <div style="display:none">
     <input type="hidden" name="%s" value="%s">
 </div>
 EOF
-}
-
-sub _is_action_path_valid {
-    # TODO IMPLEMENT
-    return 1;
+        });
+    }
+    
+    return $dom;
 }
 
 sub validate_form {
-    my ($params, $token, $secret, $req_path) = @_;
+    my ($req, $token, $secret) = @_;
+    
+    my $params = $req->params;
+    my $req_path = $req->url->path;
 
     if (! $token) {
         return 'Token is not found';
@@ -291,18 +297,16 @@ The plugin detects following error for now.
 
 =head3 inject_digest
 
-Generates a digest string of form structure and inject into itself.
+Generates a digest strings of form structure for each forms in mojo response
+and inject them into itself.
 
-    $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
-        my $form = shift;
-        inject_digest($form, $token_key, $app->secret);
-    });
+    my $html = inject_digest($res, ['/path1', '/path2'], $token_key, $secret);
 
 =head3 validate_form
 
-Validates given form data by given digest.
+Validates form data of given mojo request by given digest.
 
-    my $error = validate_form($c->tx->req->params, $digest, $app->secret);
+    my $error = validate_form($creq, $digest, $secret);
 
 =head2 OPTIONS
 
