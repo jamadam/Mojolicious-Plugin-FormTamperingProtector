@@ -92,7 +92,7 @@ my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_pref
     my $digest = digest_decode($unsigned);
     is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
         "foo" => {}
-    }};
+    }}, 'right rule';
 }
 
 my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$token_key_prefix-token]");
@@ -107,7 +107,7 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_pref
             $DIGEST_KEY_NOT_REQUIRED => 1,
             $DIGEST_KEY_OPTIONS => ["fooValue1", "fooValue2"]
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -119,7 +119,7 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_pref
             $DIGEST_KEY_NOT_REQUIRED => 1,
             $DIGEST_KEY_OPTIONS => ["fooValue1","fooValue2"]
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$token_key_prefix-token]");
@@ -133,7 +133,7 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_pref
         foo => {
             $DIGEST_KEY_OPTIONS => ['', "fooValue1", "fooValue2"]
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -148,7 +148,7 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_pref
             $DIGEST_KEY_MAXLENGTH => 0
         },
         foo3 => {}
-    }};
+    }}, 'right rule';
 }
 
 my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -159,7 +159,7 @@ my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_pref
         foo1 => {
             $DIGEST_KEY_NOT_NULL => 1
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -170,7 +170,7 @@ my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$token_key_pre
         foo => {
             $DIGEST_KEY_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3']
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -181,7 +181,7 @@ my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$token_key_pr
         foo => {
             $DIGEST_KEY_OPTIONS => ['', 'fooValue1', 'fooValue2', 'a"b', 'a/b']
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -192,7 +192,7 @@ my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$token_key_pr
         foo => {
             $DIGEST_KEY_PATTERN => "\\d\\d\\d"
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -205,7 +205,7 @@ my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$token_key_pr
             $DIGEST_KEY_MAX => "10",
             $DIGEST_KEY_TYPE => 'number'
         }
-    }};
+    }}, 'right rule';
 }
 
 my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -222,7 +222,7 @@ my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$token_key_pr
     is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
         foo => {},
         bar => {}
-    }};
+    }}, 'right rule';
 }
 
 my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$token_key_prefix-token]")->attr('value');
@@ -233,7 +233,7 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$token_key_pr
         foo => {
             $DIGEST_KEY_OPTIONS => ['value1', 'value2']
         }
-    }};
+    }}, 'right rule';
 }
 
 $t->text_is("#jp", 'やったー');
