@@ -28,15 +28,15 @@ sub register {
     
     my $token_key = $options->{token_key_prefix}. "-token";
     
+    my $actions =
+        ref $options->{action} ? $options->{action} : [$options->{action}];
+    
     $app->hook('around_dispatch' => sub {
         (my $next, my $c) = @_;
         
-        my @actions =
-            ref $options->{action} ? @{$options->{action}} : $options->{action};
-        
         my $req = $c->req;
         
-        if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @actions) {
+        if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @$actions) {
             my $token = $c->param($token_key);
             $req->params->remove($token_key);
             if (my $error = validate_form($req, $token, $app->secret)) {
@@ -47,9 +47,7 @@ sub register {
         $next->();
         
         if ($c->res->headers->content_type =~ qr{^text/html}) {
-            
-            my $dom = inject_digest($c->res, \@actions, $token_key, $app->secret);
-            
+            my $dom = inject_digest($c->res, $actions, $token_key, $app->secret);
             $c->res->body(encode('UTF-8', $dom));
         }
     });
