@@ -26,7 +26,7 @@ my $json = Mojo::JSON->new;
 sub register {
     my ($self, $app, $options) = @_;
     
-    my $token_key = $options->{token_key_prefix}. "-token";
+    my $token_key = $options->{namespace}. "-token";
     
     my $actions =
         ref $options->{action} ? $options->{action} : [$options->{action}];
@@ -252,7 +252,7 @@ Mojolicious::Plugin::FormValidatorLazy - FormValidatorLazy
 =head1 SYNOPSIS
 
     plugin form_validator_lazy => {
-        token_key_prefix => 'form_validator_lazy',
+        namespace => 'form_validator_lazy',
         action => ['/receptor1'],
         blackhole => sub {
             $_[0]->res->code(400);

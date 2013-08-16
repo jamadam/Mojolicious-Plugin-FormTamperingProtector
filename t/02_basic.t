@@ -15,10 +15,10 @@ my $DIGEST_KEY_TYPE         = 7;
 my $DIGEST_KEY2_ACTION      = 0;
 my $DIGEST_KEY2_DIGEST      = 1;
 
-my $token_key_prefix = 'form-tampering-protecter';
+my $namespace = 'FormValidatorLazy';
 
 plugin form_validator_lazy => {
-    token_key_prefix => $token_key_prefix,
+    namespace => $namespace,
     action => ['/receptor1', '/receptor3'],
     blackhole => sub {
         $_[0]->res->code(400);
@@ -32,7 +32,7 @@ get '/test1' => sub {
 
 post '/receptor1' => sub {
     my $c = shift;
-    is $c->tx->req->param($token_key_prefix. '-token'), undef, 'token is cleaned up';
+    is $c->tx->req->param($namespace. '-token'), undef, 'token is cleaned up';
     $c->render(text => 'post completed');
 };
 
@@ -66,7 +66,7 @@ my $dom;
 $t->get_ok('/test1');
 $t->status_is(200);
 
-my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->attr('value');
+my $token = $t->tx->res->dom->at("form input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token, app->secret);
     my $digest = digest_decode($unsigned);
@@ -87,7 +87,7 @@ my $token = $t->tx->res->dom->at("form input[name=$token_key_prefix-token]")->at
     }};
 }
 
-my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token2, app->secret);
     my $digest = digest_decode($unsigned);
@@ -96,10 +96,10 @@ my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$token_key_pref
     }}, 'right rule';
 }
 
-my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$token_key_prefix-token]");
+my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$namespace-token]");
 is $token3, undef;
 
-my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token4, app->secret);
     my $digest = digest_decode($unsigned);
@@ -111,7 +111,7 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$token_key_pref
     }}, 'right rule';
 }
 
-my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token5, app->secret);
     my $digest = digest_decode($unsigned);
@@ -123,10 +123,10 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$token_key_pref
     }}, 'right rule';
 }
 
-my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$token_key_prefix-token]");
+my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$namespace-token]");
 is $token6, undef;
 
-my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token7, app->secret);
     my $digest = digest_decode($unsigned);
@@ -137,7 +137,7 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$token_key_pref
     }}, 'right rule';
 }
 
-my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token8, app->secret);
     my $digest = digest_decode($unsigned);
@@ -152,7 +152,7 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$token_key_pref
     }}, 'right rule';
 }
 
-my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token9, app->secret);
     my $digest = digest_decode($unsigned);
@@ -163,7 +163,7 @@ my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$token_key_pref
     }}, 'right rule';
 }
 
-my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token10, app->secret);
     my $digest = digest_decode($unsigned);
@@ -174,7 +174,7 @@ my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$token_key_pre
     }}, 'right rule';
 }
 
-my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token11, app->secret);
     my $digest = digest_decode($unsigned);
@@ -185,7 +185,7 @@ my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$token_key_pr
     }}, 'right rule';
 }
 
-my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token12, app->secret);
     my $digest = digest_decode($unsigned);
@@ -196,7 +196,7 @@ my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$token_key_pr
     }}, 'right rule';
 }
 
-my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token13, app->secret);
     my $digest = digest_decode($unsigned);
@@ -209,14 +209,14 @@ my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$token_key_pr
     }}, 'right rule';
 }
 
-my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token14, app->secret);
     my $digest = digest_decode($unsigned);
     is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor3', $DIGEST_KEY2_DIGEST => {}};
 }
 
-my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token15, app->secret);
     my $digest = digest_decode($unsigned);
@@ -226,7 +226,7 @@ my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$token_key_pr
     }}, 'right rule';
 }
 
-my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token16, app->secret);
     my $digest = digest_decode($unsigned);
@@ -237,7 +237,7 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$token_key_pr
     }}, 'right rule';
 }
 
-my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$token_key_prefix-token]")->attr('value');
+my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token17, app->secret);
     my $digest = digest_decode($unsigned);
@@ -254,7 +254,7 @@ $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
     bar => 'barValue',
     baz => 'bazValue',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(200);
 $t->content_is('post completed');
@@ -264,7 +264,7 @@ $t->post_ok('/receptor1' => form => {
     bar => 'barValue',
     baz => 'bazValue',
     btn => 'send',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(200);
 $t->content_is('post completed');
@@ -274,7 +274,7 @@ $t->post_ok('/receptor1' => form => {
     bar => 'barValue',
     baz => 'bazValue',
     btn => 'send2',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(200);
 $t->content_is('post completed');
@@ -284,7 +284,7 @@ $t->post_ok('/receptor1' => form => {
     bar => 'barValue',
     baz => 'bazValue',
     btn3 => 'send3',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(200);
 $t->content_is('post completed');
@@ -294,7 +294,7 @@ $t->post_ok('/receptor1' => form => {
     bar => 'barValue',
     baz => 'bazValue',
     btn3 => 'tampered',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(400);
 $t->content_like(qr{btn3});
@@ -302,7 +302,7 @@ $t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
-    "$token_key_prefix-token" => $token2,
+    "$namespace-token" => $token2,
 });
 $t->status_is(200);
 $t->content_is('post completed');
@@ -319,7 +319,7 @@ $t->post_ok('/receptor1' => form => {
     bar => 'barValue',
     baz => 'bazValue',
     biz => 'bizValue',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(400);
 $t->content_like(qr{biz});
@@ -328,7 +328,7 @@ $t->content_like(qr{injected});
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
     bar => 'barValue',
-    "$token_key_prefix-token" => $token2,
+    "$namespace-token" => $token2,
 });
 $t->status_is(400);
 $t->content_like(qr{bar});
@@ -337,7 +337,7 @@ $t->content_like(qr{injected});
 $t->post_ok('/receptor1' => form => {
     bar => 'barValue',
     baz => 'bazValue',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(400);
 $t->content_like(qr{foo});
@@ -346,7 +346,7 @@ $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
     bar => 'barValue',
     baz => 'bazValue-tampered!',
-    "$token_key_prefix-token" => $token,
+    "$namespace-token" => $token,
 });
 $t->status_is(400);
 $t->content_like(qr{baz});
@@ -365,7 +365,7 @@ $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
     bar => 'barValue',
     baz => 'bazValue',
-    "$token_key_prefix-token" => $token.'-tampered',
+    "$namespace-token" => $token.'-tampered',
 });
 $t->status_is(400);
 $t->content_like(qr{Token});
@@ -375,7 +375,7 @@ $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
     bar => 'barValue',
     baz => 'bazValue',
-    "$token_key_prefix-token" => 'tampered-'. $token,
+    "$namespace-token" => 'tampered-'. $token,
 });
 $t->status_is(400);
 $t->content_like(qr{Token});
@@ -383,26 +383,26 @@ $t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue1',
-    "$token_key_prefix-token" => $token4,
+    "$namespace-token" => $token4,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue5',
-    "$token_key_prefix-token" => $token4,
+    "$namespace-token" => $token4,
 });
 $t->status_is(400);
 $t->content_like(qr{foo});
 $t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {
-    "$token_key_prefix-token" => $token4,
+    "$namespace-token" => $token4,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => ['fooValue1','invalid'],
-    "$token_key_prefix-token" => $token4,
+    "$namespace-token" => $token4,
 });
 $t->status_is(400);
 $t->content_like(qr{foo});
@@ -410,18 +410,18 @@ $t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {
     foo => ['fooValue1','fooValue2'],
-    "$token_key_prefix-token" => $token5,
+    "$namespace-token" => $token5,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
-    "$token_key_prefix-token" => $token5,
+    "$namespace-token" => $token5,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => '',
-    "$token_key_prefix-token" => $token5,
+    "$namespace-token" => $token5,
 });
 $t->status_is(400);
 
@@ -429,7 +429,7 @@ $t->post_ok('/receptor1' => form => {
     foo1 => 'a',
     foo2 => '',
     foo3 => 'a',
-    "$token_key_prefix-token" => $token8,
+    "$namespace-token" => $token8,
 });
 $t->status_is(200);
 
@@ -437,7 +437,7 @@ $t->post_ok('/receptor1' => form => {
     foo1 => 'a' x 33,
     foo2 => '',
     foo3 => 'a',
-    "$token_key_prefix-token" => $token8,
+    "$namespace-token" => $token8,
 });
 $t->status_is(400);
 
@@ -445,130 +445,130 @@ $t->post_ok('/receptor1' => form => {
     foo1 => '',
     foo2 => 'a',
     foo3 => 'a',
-    "$token_key_prefix-token" => $token8,
+    "$namespace-token" => $token8,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo1 => '',
-    "$token_key_prefix-token" => $token9,
+    "$namespace-token" => $token9,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo1 => '1',
-    "$token_key_prefix-token" => $token9,
+    "$namespace-token" => $token9,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
-    "$token_key_prefix-token" => $token10,
+    "$namespace-token" => $token10,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue1',
-    "$token_key_prefix-token" => $token10,
+    "$namespace-token" => $token10,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue1',
-    "$token_key_prefix-token" => $token11,
+    "$namespace-token" => $token11,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => '',
-    "$token_key_prefix-token" => $token11,
+    "$namespace-token" => $token11,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue3',
-    "$token_key_prefix-token" => $token11,
+    "$namespace-token" => $token11,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
-    "$token_key_prefix-token" => $token11,
+    "$namespace-token" => $token11,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => '333',
-    "$token_key_prefix-token" => $token12,
+    "$namespace-token" => $token12,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => '3333',
-    "$token_key_prefix-token" => $token12,
+    "$namespace-token" => $token12,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => '33a',
-    "$token_key_prefix-token" => $token12,
+    "$namespace-token" => $token12,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => '',
-    "$token_key_prefix-token" => $token12,
+    "$namespace-token" => $token12,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => '7',
-    "$token_key_prefix-token" => $token13,
+    "$namespace-token" => $token13,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => '10',
-    "$token_key_prefix-token" => $token13,
+    "$namespace-token" => $token13,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
     foo => '1',
-    "$token_key_prefix-token" => $token13,
+    "$namespace-token" => $token13,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => '22',
-    "$token_key_prefix-token" => $token13,
+    "$namespace-token" => $token13,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => 'a',
-    "$token_key_prefix-token" => $token13,
+    "$namespace-token" => $token13,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => '',
-    "$token_key_prefix-token" => $token12,
+    "$namespace-token" => $token12,
 });
 $t->status_is(400);
 
 $t->post_ok('/receptor3' => form => {
-    "$token_key_prefix-token" => $token14,
+    "$namespace-token" => $token14,
 });
 $t->status_is(200);
 
 $t->post_ok('/receptor1' => form => {
-    "$token_key_prefix-token" => $token14,
+    "$namespace-token" => $token14,
 });
 $t->status_is(400);
 $t->content_like(qr{Action attribute});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'やったー',
-    "$token_key_prefix-token" => $token17,
+    "$namespace-token" => $token17,
 });
 $t->status_is(200);
 
