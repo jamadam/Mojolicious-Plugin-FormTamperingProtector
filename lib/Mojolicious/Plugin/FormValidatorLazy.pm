@@ -268,8 +268,10 @@ B<This software is considered to be alpha quality and isn't recommended for
 regular usage.>
 
 Mojolicious::Plugin::FormValidatorLazy is a Mojolicious plugin for validating
-post data with auto-generated validation rules. The plugin generates validation
-rules based on DOM structure and catch the errors.
+post data with auto-generated validation rules out of original forms.
+It analizes the HTML forms before sending them to client, generate the rules,
+inject it into original forms within a hidden fields so the plugin can detect
+the validation rule when a post request comes.
 
 The plugin detects following error for now.
 
@@ -283,12 +285,16 @@ injected unknown fields are blocked.
 =item Unknown values of selectable fields.
 
 Selectable values of checkboxes, radio buttons and select options are white
-listed and unknow values are blocked. 
+listed and unknow values are blocked.
+
+The plugin also detects characteristics of tag types. Such as unchecked
+checkboxes don't appear to data(not required), radio buttons can't be null only
+when default value is offered(not null), and so on.
 
 =item Hidden field tamperings.
 
-Hidden typed input can't be ommited and the value takes only one option. the
-plugin blocks values against the rule.
+Hidden typed input can't be ommited(required) and the value takes only one
+option. the plugin blocks values against the rule.
 
 =item Values against maxlength attributes.
 
@@ -314,9 +320,7 @@ and inject them into itself.
 
 Validates form data of given mojo request by given digest.
 
-    my $error = validate_form($creq, $digest, $secret);
-
-=head2 OPTIONS
+    my $error = validate_form($req, $digest, $secret);
 
 =head1 AUTHOR
 
@@ -324,7 +328,7 @@ Sugama Keita, E<lt>sugama@jamadam.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2011 by Sugama Keita.
+Copyright (C) Sugama Keita.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
