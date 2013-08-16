@@ -5,7 +5,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 our $VERSION = '0.01';
 use Data::Dumper;
 use Mojo::JSON;
-use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
+use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare b64_decode b64_encode};
 
 my $DIGEST_KEY_NOT_REQUIRED = 0;
 my $DIGEST_KEY_MAXLENGTH    = 1;
@@ -219,17 +219,11 @@ sub validate_form {
 }
 
 sub digest_encode {
-    my $out = $json->encode(shift);
-    $out =~ s{/}{\\/}g;
-    $out =~ s{(?<!\\)"}{/}g;
-    return $out;
+    return b64_encode($json->encode(shift), '');
 }
 
 sub digest_decode {
-    my $in = shift;
-    $in =~ s{(?<!\\)/}{"}g;
-    $in =~ s{\\/}{/}g;
-    return $json->decode($in);
+    return $json->decode(b64_decode(shift));
 }
 
 sub sign {

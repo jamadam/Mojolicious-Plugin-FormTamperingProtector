@@ -116,6 +116,11 @@
                 <input type="submit" value="send">
             </div>
         </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="hidden" name="foo" value="やったー">
+            </div>
+        </form>
         <span id="jp">やったー</span>
     </body>
 </html>

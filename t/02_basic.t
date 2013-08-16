@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 160;
+use Test::More tests => 165;
 use Data::Dumper;
 
 my $DIGEST_KEY_NOT_REQUIRED = 0;
@@ -58,6 +58,7 @@ is_deeply digest_decode(digest_encode(["\""])), ["\""];
 is_deeply digest_decode(digest_encode(["\\\""])), ["\\\""];
 is_deeply digest_decode(digest_encode(["\\\/"])), ["\\\/"];
 is_deeply digest_decode(digest_encode(["\/\/"])), ["\/\/"];
+is_deeply digest_decode(digest_encode(["やったー"])), ["やったー"];
 
 my $t = Test::Mojo->new;
 my $dom;
@@ -232,6 +233,17 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$token_key_pr
     is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
         foo => {
             $DIGEST_KEY_OPTIONS => ['value1', 'value2']
+        }
+    }}, 'right rule';
+}
+
+my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$token_key_prefix-token]")->attr('value');
+{
+    my $unsigned = unsign($token17, app->secret);
+    my $digest = digest_decode($unsigned);
+    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
+        foo => {
+            $DIGEST_KEY_OPTIONS => ['やったー']
         }
     }}, 'right rule';
 }
@@ -553,6 +565,12 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{Action attribute});
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'やったー',
+    "$token_key_prefix-token" => $token17,
+});
+$t->status_is(200);
 
 $t->get_ok('/test2.css');
 $t->status_is(200);
