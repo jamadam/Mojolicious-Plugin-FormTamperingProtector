@@ -255,8 +255,10 @@ Mojolicious::Plugin::FormValidatorLazy - FormValidatorLazy
         namespace => 'form_validator_lazy',
         action => ['/receptor1'],
         blackhole => sub {
-            $_[0]->res->code(400);
-            $_[0]->render(text => 'An error occured');
+            my ($c, $error) = @_;
+            app->log($error);
+            $c->res->code(400);
+            $c->render(text => 'An error occured');
         },
     };
 
