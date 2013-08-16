@@ -7,16 +7,16 @@ use Data::Dumper;
 use Mojo::JSON;
 use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare};
 
-my $DIGEST_KEY_ALLOW_NULL = 0;
-my $DIGEST_KEY_MAXLENGTH  = 1;
-my $DIGEST_KEY_REQUIRED   = 2;
-my $DIGEST_KEY_OPTIONS    = 3;
-my $DIGEST_KEY_PATTERN    = 4;
-my $DIGEST_KEY_MIN        = 5;
-my $DIGEST_KEY_MAX        = 6;
-my $DIGEST_KEY_TYPE       = 7;
-my $DIGEST_KEY2_ACTION     = 1;
-my $DIGEST_KEY2_DIGEST     = 2;
+my $DIGEST_KEY_NOT_REQUIRED = 0;
+my $DIGEST_KEY_MAXLENGTH    = 1;
+my $DIGEST_KEY_NOT_NULL     = 2;
+my $DIGEST_KEY_OPTIONS      = 3;
+my $DIGEST_KEY_PATTERN      = 4;
+my $DIGEST_KEY_MIN          = 5;
+my $DIGEST_KEY_MAX          = 6;
+my $DIGEST_KEY_TYPE         = 7;
+my $DIGEST_KEY2_ACTION      = 0;
+my $DIGEST_KEY2_DIGEST      = 1;
 
 my $json = Mojo::JSON->new;
 
@@ -77,13 +77,13 @@ sub inject_digest {
                 }
                 
                 if ($type eq 'submit' || $type eq 'image') {
-                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} //= 1;
                 } elsif ($type eq 'checkbox') {
-                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} //= 1;
                 } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
-                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} //= 1;
+                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} //= 1;
                 } elsif ($tag->type eq 'select') {
-                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
+                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} = 0;
                     $tag->find('option')->each(sub {
                         push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}},
                                                         shift->attr('value'));
@@ -97,7 +97,7 @@ sub inject_digest {
                         $digest->{$name}->{$DIGEST_KEY_MAX} = $val;
                     }
                 } else {
-                    $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL} = 0;
+                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} = 0;
                     my $maxlength = $tag->attr('maxlength');
                     if ($maxlength =~ /./) {
                         $digest->{$name}->{$DIGEST_KEY_MAXLENGTH} =
@@ -105,7 +105,7 @@ sub inject_digest {
                     }
                 }
                 if (exists $tag->attr->{required}) {
-                    $digest->{$name}->{$DIGEST_KEY_REQUIRED} = 1;
+                    $digest->{$name}->{$DIGEST_KEY_NOT_NULL} = 1;
                 }
                 if (my $val = $tag->attr->{pattern}) {
                     $digest->{$name}->{$DIGEST_KEY_PATTERN} = $val;
@@ -113,8 +113,8 @@ sub inject_digest {
             });
             
             for my $elem (values %$digest) {
-                if (! $elem->{$DIGEST_KEY_ALLOW_NULL}) {
-                    delete $elem->{$DIGEST_KEY_ALLOW_NULL}
+                if (! $elem->{$DIGEST_KEY_NOT_REQUIRED}) {
+                    delete $elem->{$DIGEST_KEY_NOT_REQUIRED}
                 }
             }
             
@@ -164,7 +164,7 @@ sub validate_form {
     }
     for my $name (keys %{$digest}) {
         if (! grep {$_ eq $name} $params->param) {
-            if (! $digest->{$name}->{$DIGEST_KEY_ALLOW_NULL}) {
+            if (! $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED}) {
                 return "Field $name is not given";
             }
         }
@@ -182,7 +182,7 @@ sub validate_form {
                 }
             }
         }
-        if (defined $digest->{$name}->{$DIGEST_KEY_REQUIRED}) {
+        if (defined $digest->{$name}->{$DIGEST_KEY_NOT_NULL}) {
             for my $given ($params->param($name)) {
                 if (! $given || length($given) == 0) {
                     return "Field $name cannot be empty";
