@@ -70,30 +70,36 @@ my $token = $t->tx->res->dom->at("form input[name=$namespace-token]")->attr('val
 {
     my $unsigned = unsign($token, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        bar => {},
-        baz => {
-            $DIGEST_KEY_OPTIONS => ["bazValue"]
-        },
-        foo => {},
-        btn => {
-            $DIGEST_KEY_NOT_REQUIRED => 1,
-            $DIGEST_KEY_OPTIONS => ["send", "send2"]
-        },
-        btn3 => {
-            $DIGEST_KEY_NOT_REQUIRED => 1,
-            $DIGEST_KEY_OPTIONS => ["send3"]
-        }
-    }};
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			bar => {},
+			baz => {
+				$DIGEST_KEY_OPTIONS => ["bazValue"],
+			},
+			foo => {},
+			btn => {
+				$DIGEST_KEY_NOT_REQUIRED => 1,
+				$DIGEST_KEY_OPTIONS => ["send", "send2"],
+			},
+			btn3 => {
+				$DIGEST_KEY_NOT_REQUIRED => 1,
+				$DIGEST_KEY_OPTIONS => ["send3"],
+			},
+		},
+	};
 }
 
 my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token2, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        "foo" => {}
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			"foo" => {},
+		},
+	}, 'right rule';
 }
 
 my $token3 = $t->tx->res->dom->find('form')->[2]->at("input[name=$namespace-token]");
@@ -103,24 +109,30 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-toke
 {
     my $unsigned = unsign($token4, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        "foo" => {
-            $DIGEST_KEY_NOT_REQUIRED => 1,
-            $DIGEST_KEY_OPTIONS => ["fooValue1", "fooValue2"]
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			"foo" => {
+				$DIGEST_KEY_NOT_REQUIRED => 1,
+				$DIGEST_KEY_OPTIONS => ["fooValue1", "fooValue2"],
+			},
+		},
+	}, 'right rule';
 }
 
 my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token5, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_NOT_REQUIRED => 1,
-            $DIGEST_KEY_OPTIONS => ["fooValue1","fooValue2"]
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_NOT_REQUIRED => 1,
+				$DIGEST_KEY_OPTIONS => ["fooValue1","fooValue2"],
+			},
+	    },
+	}, 'right rule';
 }
 
 my $token6 = $t->tx->res->dom->find('form')->[5]->at("input[name=$namespace-token]");
@@ -130,122 +142,157 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-toke
 {
     my $unsigned = unsign($token7, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_OPTIONS => ['', "fooValue1", "fooValue2"]
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_OPTIONS => ['', "fooValue1", "fooValue2"],
+			},
+		},
+	}, 'right rule';
 }
 
 my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token8, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo1 => {
-            $DIGEST_KEY_MAXLENGTH => 32
-        },
-        foo2 => {
-            $DIGEST_KEY_MAXLENGTH => 0
-        },
-        foo3 => {}
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo1 => {
+				$DIGEST_KEY_MAXLENGTH => 32,
+			},
+			foo2 => {
+				$DIGEST_KEY_MAXLENGTH => 0,
+			},
+			foo3 => {},
+		}
+	}, 'right rule';
 }
 
 my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token9, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo1 => {
-            $DIGEST_KEY_NOT_NULL => 1
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo1 => {
+				$DIGEST_KEY_NOT_NULL => 1,
+			},
+		},
+	}, 'right rule';
 }
 
 my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token10, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3']
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
+			},
+		},
+	}, 'right rule';
 }
 
 my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token11, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_OPTIONS => ['', 'fooValue1', 'fooValue2', 'a"b', 'a/b']
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_OPTIONS => [
+					'', 'fooValue1', 'fooValue2', 'a"b', 'a/b',
+				],
+			},
+		},
+	}, 'right rule';
 }
 
 my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token12, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_PATTERN => "\\d\\d\\d"
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_PATTERN => "\\d\\d\\d",
+			},
+		},
+	}, 'right rule';
 }
 
 my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token13, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_MIN => "5",
-            $DIGEST_KEY_MAX => "10",
-            $DIGEST_KEY_TYPE => 'number'
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_MIN => "5",
+				$DIGEST_KEY_MAX => "10",
+				$DIGEST_KEY_TYPE => 'number',
+			},
+		},
+	}, 'right rule';
 }
 
 my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token14, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor3', $DIGEST_KEY2_DIGEST => {}};
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor3',
+		$DIGEST_KEY2_DIGEST => {},
+	};
 }
 
 my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token15, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {},
-        bar => {}
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {},
+			bar => {},
+		},
+	}, 'right rule';
 }
 
 my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token16, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_OPTIONS => ['value1', 'value2']
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_OPTIONS => ['value1', 'value2'],
+			},
+		},
+	}, 'right rule';
 }
 
 my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-token]")->attr('value');
 {
     my $unsigned = unsign($token17, app->secret);
     my $digest = digest_decode($unsigned);
-    is_deeply $digest, {$DIGEST_KEY2_ACTION => '/receptor1', $DIGEST_KEY2_DIGEST => {
-        foo => {
-            $DIGEST_KEY_OPTIONS => ['やったー']
-        }
-    }}, 'right rule';
+    is_deeply $digest, {
+		$DIGEST_KEY2_ACTION => '/receptor1',
+		$DIGEST_KEY2_DIGEST => {
+			foo => {
+				$DIGEST_KEY_OPTIONS => ['やったー'],
+			},
+		},
+	}, 'right rule';
 }
 
 $t->text_is("#jp", 'やったー');
