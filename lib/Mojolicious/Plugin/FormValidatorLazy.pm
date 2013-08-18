@@ -173,37 +173,39 @@ sub validate_form {
                 return "Field $name is not given";
             }
         }
+        
+        my @params = $params->param($name);
+        
         if (my $allowed = $digest->{$name}->{$DIGEST_KEY_OPTIONS}) {
-            for my $given ($params->param($name)) {
-                if (defined $given && ! grep {$_ eq $given} @$allowed) {
+            for my $given (@params) {
+                if (! grep {$_ eq $given} @$allowed) {
                     return "Field $name has been tampered";
                 }
             }
         }
         if (exists $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
-            for my $given ($params->param($name)) {
+            for my $given (@params) {
                 if (length($given) > $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
                     return "Field $name is too long";
                 }
             }
         }
         if (defined $digest->{$name}->{$DIGEST_KEY_NOT_NULL}) {
-            for my $given ($params->param($name)) {
-                if (! $given || length($given) == 0) {
+            for my $given (@params) {
+                if (length($given) == 0) {
                     return "Field $name cannot be empty";
                 }
             }
         }
         if (my $pattern = $digest->{$name}->{$DIGEST_KEY_PATTERN}) {
-            for my $given ($params->param($name)) {
+            for my $given (@params) {
                 if ($given !~ /\A$pattern\Z/) {
                     return "Field $name not match pattern";
                 }
             }
         }
-        if ($digest->{$name}->{$DIGEST_KEY_TYPE} &&
-                            $digest->{$name}->{$DIGEST_KEY_TYPE} eq 'number') {
-            for my $given ($params->param($name)) {
+        if (($digest->{$name}->{$DIGEST_KEY_TYPE} || '') eq 'number') {
+            for my $given (@params) {
                 if ($given !~ /\A[\d\+\-\.]+\Z/) {
                     return "Field $name not match pattern";
                 }
