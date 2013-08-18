@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 165;
+use Test::More tests => 167;
 use Data::Dumper;
 
 my $DIGEST_KEY_NOT_REQUIRED = 0;
@@ -592,6 +592,12 @@ $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
     foo => 'a',
+    "$namespace-token" => $token13,
+});
+$t->status_is(400);
+
+$t->post_ok('/receptor1' => form => {
+    foo => ['6', 11],
     "$namespace-token" => $token13,
 });
 $t->status_is(400);

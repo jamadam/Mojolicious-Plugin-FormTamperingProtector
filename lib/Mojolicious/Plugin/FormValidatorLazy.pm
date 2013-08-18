@@ -208,13 +208,11 @@ sub validate_form {
                     return "Field $name not match pattern";
                 }
                 if (my $min = $digest->{$name}->{$DIGEST_KEY_MIN}) {
-                    my $given = scalar $params->param($name);
                     if ($given < $min) {
                         return "Field $name too low";
                     }
                 }
                 if (my $max = $digest->{$name}->{$DIGEST_KEY_MAX}) {
-                    my $given = scalar $params->param($name);
                     if ($given > $max) {
                         return "Field $name too great";
                     }
