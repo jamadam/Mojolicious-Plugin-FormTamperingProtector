@@ -5,7 +5,8 @@ use Mojo::Base 'Mojolicious::Plugin';
 our $VERSION = '0.01';
 use Data::Dumper;
 use Mojo::JSON;
-use Mojo::Util qw{encode xml_escape hmac_sha1_sum secure_compare b64_decode b64_encode};
+use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
+                                                        b64_decode b64_encode};
 
 my $DIGEST_KEY_NOT_REQUIRED = 0;
 my $DIGEST_KEY_MAXLENGTH    = 1;
@@ -47,16 +48,22 @@ sub register {
         $next->();
         
         if ($c->res->headers->content_type =~ qr{^text/html}) {
-            my $dom = inject_digest($c->res, $actions, $token_key, $app->secret);
-            $c->res->body(encode('UTF-8', $dom));
+            $c->res->body(inject_digest(
+                $c->res->body,
+                $c->res->content->charset,
+                $actions,
+                $token_key,
+                $app->secret
+            ));
         }
     });
 }
 
 sub inject_digest {
-    my ($res, $actions, $token_key, $secret) = @_;
+    my ($body, $charset, $actions, $token_key, $secret) = @_;
     
-    my $dom = $res->dom;
+    $body = decode($charset, $body) // $body if $charset;
+    my $dom = Mojo::DOM->new($body);
     
     for my $action (@$actions) {
         $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
@@ -129,7 +136,7 @@ EOF
         });
     }
     
-    return $dom;
+    return encode($charset, $dom->to_xml);
 }
 
 sub validate_form {
@@ -314,7 +321,8 @@ HTML5 supports some validation attributes such as [required], [pattern=*],
 Generates a digest strings of form structure for each forms in mojo response
 and inject them into itself.
 
-    my $html = inject_digest($res, ['/path1', '/path2'], $token_key, $secret);
+    my $html = inject_digest($res, $charset,
+                                    ['/path1', '/path2'], $token_key, $secret);
 
 =head3 validate_form
 
