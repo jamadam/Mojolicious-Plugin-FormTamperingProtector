@@ -18,6 +18,7 @@ my $DIGEST_KEY_MAX          = 6;
 my $DIGEST_KEY_TYPE         = 7;
 my $DIGEST_KEY2_ACTION      = 0;
 my $DIGEST_KEY2_DIGEST      = 1;
+my $DIGEST_KEY2_SESSION     = 2;
 
 my $json = Mojo::JSON->new;
 
@@ -27,40 +28,48 @@ my $json = Mojo::JSON->new;
 sub register {
     my ($self, $app, $options) = @_;
     
-    my $token_key = $options->{namespace}. "-token";
+    my $digest_key = $options->{namespace}. "-digest";
     
     my $actions =
         ref $options->{action} ? $options->{action} : [$options->{action}];
     
-    $app->hook('around_dispatch' => sub {
-        (my $next, my $c) = @_;
+    $app->hook(before_dispatch => sub {
+        my $c = shift;
         
         my $req = $c->req;
         
         if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @$actions) {
-            my $token = $c->param($token_key);
-            $req->params->remove($token_key);
-            if (my $error = validate_form($req, $token, $app->secret)) {
+            
+            my $token = $c->param($digest_key);
+            $req->params->remove($digest_key);
+            
+            if (my $error = validate_form($req, $token, $c->session('sessid'))) {
                 return $options->{blackhole}->($c, $error);
             }
         }
-        
-        $next->();
-        
+    });
+    
+    $app->hook(after_dispatch => sub {
+        my $c = shift;
         if ($c->res->headers->content_type =~ qr{^text/html}) {
+            my $sessid = $c->session('sessid');
+            if (! $sessid) {
+                $sessid = hmac_sha1_sum(time(). {}. rand(), $$);
+                $c->session('sessid' => $sessid);
+            }
             $c->res->body(inject_digest(
                 $c->res->body,
                 $c->res->content->charset,
                 $actions,
-                $token_key,
-                $app->secret
+                $digest_key,
+                $sessid,
             ));
         }
     });
 }
 
 sub inject_digest {
-    my ($body, $charset, $actions, $token_key, $secret) = @_;
+    my ($body, $charset, $actions, $token_key, $sessid) = @_;
     
     $body = decode($charset, $body) // $body if $charset;
     my $dom = Mojo::DOM->new($body);
@@ -123,12 +132,13 @@ sub inject_digest {
                 }
             }
             
-            my $signed = sign(digest_encode({
-                $DIGEST_KEY2_ACTION => $form->attr('action'),
-                $DIGEST_KEY2_DIGEST => $digest,
-            }), $secret);
+            my $digest_encoded = sign(digest_encode({
+                $DIGEST_KEY2_ACTION     => $form->attr('action'),
+                $DIGEST_KEY2_DIGEST     => $digest,
+                $DIGEST_KEY2_SESSION    => $sessid,
+            }), $sessid);
             
-            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $signed));
+            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $digest_encoded));
 <div style="display:none">
     <input type="hidden" name="%s" value="%s">
 </div>
@@ -140,22 +150,29 @@ EOF
 }
 
 sub validate_form {
-    my ($req, $token, $secret) = @_;
+    my ($req, $encoded_digest, $sessid) = @_;
+    
+    if (! $sessid) {
+        return 'CSRF is detected';
+    }
     
     my $params = $req->params;
     my $req_path = $req->url->path;
 
-    if (! $token) {
-        return 'Token is not found';
+    if (! $encoded_digest) {
+        return 'Digest is not found';
     }
     
-    my $unsigned = unsign($token, $secret);
+    my $digest_wrapper = digest_decode(unsign($encoded_digest, $sessid));
     
-    if (! $unsigned) {
-        return 'Token has been tampered';
+    if (!$digest_wrapper) {
+        return 'Digest hsa been tampered';
     }
     
-    my $digest_wrapper = digest_decode($unsigned);
+    if ($digest_wrapper->{$DIGEST_KEY2_SESSION} ne $sessid) {
+        return 'CSRF is detected';
+    }
+    
     my $digest = $digest_wrapper->{$DIGEST_KEY2_DIGEST};
     
     if ($req_path ne $digest_wrapper->{$DIGEST_KEY2_ACTION}) {
