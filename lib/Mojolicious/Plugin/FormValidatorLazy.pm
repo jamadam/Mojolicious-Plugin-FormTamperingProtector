@@ -329,6 +329,10 @@ Values violating of maxlength are blocked.
 HTML5 supports some validation attributes such as [required], [pattern=*],
 [type=number], [min=*], [max=*]. The plugin detects them and block violations.
 
+=item CSRF
+
+This also detects CSRF.
+
 =back
 
 =head2 CLASS METHODS

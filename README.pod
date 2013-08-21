@@ -58,6 +58,10 @@ Values violating of maxlength are blocked.
 HTML5 supports some validation attributes such as [required], [pattern=*],
 [type=number], [min=*], [max=*]. The plugin detects them and block violations.
 
+=item CSRF
+
+This also detects CSRF.
+
 =back
 
 =head2 CLASS METHODS
@@ -67,7 +71,8 @@ HTML5 supports some validation attributes such as [required], [pattern=*],
 Generates a digest strings of form structure for each forms in mojo response
 and inject them into itself.
 
-    my $html = inject_digest($res, ['/path1', '/path2'], $token_key, $secret);
+    my $html = inject_digest($res, $charset,
+                                    ['/path1', '/path2'], $token_key, $secret);
 
 =head3 validate_form
 
