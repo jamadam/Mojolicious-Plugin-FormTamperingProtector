@@ -72,13 +72,13 @@ Generates a digest strings of form structure for each forms in mojo response
 and inject them into itself.
 
     my $html = inject_digest($res, $charset,
-                                    ['/path1', '/path2'], $token_key, $secret);
+                                ['/path1', '/path2'], $token_key, $session_id);
 
 =head3 validate_form
 
 Validates form data of given mojo request by given digest.
 
-    my $error = validate_form($req, $digest, $secret);
+    my $error = validate_form($req, $digest, $session_id);
 
 =head1 AUTHOR
 
