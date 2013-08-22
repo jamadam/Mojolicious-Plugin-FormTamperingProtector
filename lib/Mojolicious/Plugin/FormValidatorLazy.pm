@@ -43,8 +43,8 @@ sub register {
             my $token = $c->param($rule_key);
             $req->params->remove($rule_key);
             
-            if (my $error = validate_form($req, $token, $c->session($sess_key))) {
-                return $opt->{blackhole}->($c, $error);
+            if (my $err = validate($req, $token, $c->session($sess_key))) {
+                return $opt->{blackhole}->($c, $err);
             }
         }
     });
@@ -147,7 +147,7 @@ EOF
     return encode($charset, $dom->to_xml);
 }
 
-sub validate_form {
+sub validate {
     my ($req, $encoded_rule, $sessid) = @_;
     
     if (! $sessid) {
@@ -339,11 +339,11 @@ and inject them into itself.
     my $html = inject_rule($res, $charset,
                                 ['/path1', '/path2'], $token_key, $session_id);
 
-=head3 validate_form
+=head3 validate
 
 Validates form data of given mojo request by given rule.
 
-    my $error = validate_form($req, $rule, $session_id);
+    my $error = validate($req, $rule, $session_id);
 
 =head1 AUTHOR
 
