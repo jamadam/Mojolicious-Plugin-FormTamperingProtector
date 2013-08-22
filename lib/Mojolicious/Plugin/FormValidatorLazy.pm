@@ -8,6 +8,8 @@ use Mojo::JSON;
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
                                                         b64_decode b64_encode};
 
+my $KEY_ACTION            = 0;
+my $KEY_RULES             = 1;
 my $RULE_KEY_NOT_REQUIRED = 0;
 my $RULE_KEY_MAXLENGTH    = 1;
 my $RULE_KEY_NOT_NULL     = 2;
@@ -16,8 +18,6 @@ my $RULE_KEY_PATTERN      = 4;
 my $RULE_KEY_MIN          = 5;
 my $RULE_KEY_MAX          = 6;
 my $RULE_KEY_TYPE         = 7;
-my $RULE_KEY2_ACTION      = 0;
-my $RULE_KEY2_RULES       = 1;
 
 my $json = Mojo::JSON->new;
 
@@ -25,12 +25,13 @@ my $json = Mojo::JSON->new;
 ### register
 ### ---
 sub register {
-    my ($self, $app, $options) = @_;
+    my ($self, $app, $opt) = @_;
     
-    my $rule_key = $options->{namespace}. "-rule";
+    my $rule_key = $opt->{namespace}. "-rule";
+    my $sess_key = $opt->{namespace}. '-sessid';
     
     my $actions =
-        ref $options->{action} ? $options->{action} : [$options->{action}];
+        ref $opt->{action} ? $opt->{action} : [$opt->{action}];
     
     $app->hook(before_dispatch => sub {
         my $c = shift;
@@ -42,8 +43,8 @@ sub register {
             my $token = $c->param($rule_key);
             $req->params->remove($rule_key);
             
-            if (my $error = validate_form($req, $token, $c->session('sessid'))) {
-                return $options->{blackhole}->($c, $error);
+            if (my $error = validate_form($req, $token, $c->session($sess_key))) {
+                return $opt->{blackhole}->($c, $error);
             }
         }
     });
@@ -51,10 +52,10 @@ sub register {
     $app->hook(after_dispatch => sub {
         my $c = shift;
         if ($c->res->headers->content_type =~ qr{^text/html}) {
-            my $sessid = $c->session('sessid');
+            my $sessid = $c->session($sess_key);
             if (! $sessid) {
                 $sessid = hmac_sha1_sum(time(). {}. rand(), $$);
-                $c->session('sessid' => $sessid);
+                $c->session($sess_key => $sessid);
             }
             $c->res->body(inject_rule(
                 $c->res->body,
@@ -131,8 +132,8 @@ sub inject_rule {
             }
             
             my $rule_encoded = sign(rule_encode({
-                $RULE_KEY2_ACTION   => $form->attr('action'),
-                $RULE_KEY2_RULES    => $rules,
+                $KEY_ACTION   => $form->attr('action'),
+                $KEY_RULES    => $rules,
             }), $sessid);
             
             $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $rule_encoded));
@@ -166,9 +167,9 @@ sub validate_form {
         return 'Rule hsa been tampered';
     }
     
-    my $rules = $rule_wrapper->{$RULE_KEY2_RULES};
+    my $rules = $rule_wrapper->{$KEY_RULES};
     
-    if ($req_path ne $rule_wrapper->{$RULE_KEY2_ACTION}) {
+    if ($req_path ne $rule_wrapper->{$KEY_ACTION}) {
         return "Action attribute has been tampered";
     }
     
