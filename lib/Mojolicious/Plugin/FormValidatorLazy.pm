@@ -30,17 +30,15 @@ sub register {
     my $rule_key = $opt->{namespace}. "-rule";
     my $sess_key = $opt->{namespace}. '-sessid';
     
-    my $actions =
-        ref $opt->{action} ? $opt->{action} : [$opt->{action}];
+    my $actions = ref $opt->{action} ? $opt->{action} : [$opt->{action}];
     
     $app->hook(before_dispatch => sub {
         my $c = shift;
-        
         my $req = $c->req;
         
         if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @$actions) {
             
-            my $token = $c->param($rule_key);
+            my $token = $req->param($rule_key);
             $req->params->remove($rule_key);
             
             if (my $err = validate($req, $token, $c->session($sess_key))) {
@@ -51,28 +49,31 @@ sub register {
     
     $app->hook(after_dispatch => sub {
         my $c = shift;
+        
         if ($c->res->headers->content_type =~ qr{^text/html}) {
+            
             my $sessid = $c->session($sess_key);
+            
             if (! $sessid) {
                 $sessid = hmac_sha1_sum(time(). {}. rand(), $$);
                 $c->session($sess_key => $sessid);
             }
+            
             $c->res->body(inject_rule(
                 $c->res->body,
-                $c->res->content->charset,
                 $actions,
                 $rule_key,
                 $sessid,
+                $c->res->content->charset,
             ));
         }
     });
 }
 
 sub inject_rule {
-    my ($body, $charset, $actions, $token_key, $sessid) = @_;
+    my ($body, $actions, $token_key, $sessid, $charset) = @_;
     
-    $body = decode($charset, $body) // $body if $charset;
-    my $dom = Mojo::DOM->new($body);
+    my $dom = Mojo::DOM->new($charset ? decode($charset, $body) : $body);
     
     for my $action (@$actions) {
         $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
