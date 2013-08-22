@@ -15,7 +15,6 @@ my $DIGEST_KEY_MAX          = 6;
 my $DIGEST_KEY_TYPE         = 7;
 my $DIGEST_KEY2_ACTION      = 0;
 my $DIGEST_KEY2_DIGEST      = 1;
-my $DIGEST_KEY2_SESSION     = 2;
 
 my $namespace = 'FormValidatorLazy';
 
@@ -74,7 +73,6 @@ my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-diges
 {
     my $digest = digest_decode(unsign($token, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             bar => {},
@@ -98,7 +96,6 @@ my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$namespace-dige
 {
     my $digest = digest_decode(unsign($token2, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             "foo" => {},
@@ -113,7 +110,6 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-dige
 {
     my $digest = digest_decode(unsign($token4, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             "foo" => {
@@ -128,7 +124,6 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-dige
 {
     my $digest = digest_decode(unsign($token5, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {
@@ -146,7 +141,6 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-dige
 {
     my $digest = digest_decode(unsign($token7, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {
@@ -160,7 +154,6 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-dige
 {
     my $digest = digest_decode(unsign($token8, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo1 => {
@@ -178,7 +171,6 @@ my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-dige
 {
     my $digest = digest_decode(unsign($token9, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo1 => {
@@ -192,7 +184,6 @@ my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-dig
 {
     my $digest = digest_decode(unsign($token10, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {
@@ -206,7 +197,6 @@ my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-di
 {
     my $digest = digest_decode(unsign($token11, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {
@@ -222,7 +212,6 @@ my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-di
 {
     my $digest = digest_decode(unsign($token12, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {
@@ -236,7 +225,6 @@ my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-di
 {
     my $digest = digest_decode(unsign($token13, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {
@@ -252,7 +240,6 @@ my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-di
 {
     my $digest = digest_decode(unsign($token14, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor3',
         $DIGEST_KEY2_DIGEST     => {},
     };
@@ -262,7 +249,6 @@ my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-di
 {
     my $digest = digest_decode(unsign($token15, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {},
@@ -275,7 +261,6 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-di
 {
     my $digest = digest_decode(unsign($token16, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {
@@ -289,7 +274,6 @@ my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-di
 {
     my $digest = digest_decode(unsign($token17, $sessid));
     is_deeply $digest, {
-        $DIGEST_KEY2_SESSION    => $sessid,
         $DIGEST_KEY2_ACTION     => '/receptor1',
         $DIGEST_KEY2_DIGEST     => {
             foo => {

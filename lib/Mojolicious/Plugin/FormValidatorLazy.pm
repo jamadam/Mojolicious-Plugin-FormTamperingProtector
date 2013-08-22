@@ -18,7 +18,6 @@ my $DIGEST_KEY_MAX          = 6;
 my $DIGEST_KEY_TYPE         = 7;
 my $DIGEST_KEY2_ACTION      = 0;
 my $DIGEST_KEY2_DIGEST      = 1;
-my $DIGEST_KEY2_SESSION     = 2;
 
 my $json = Mojo::JSON->new;
 
@@ -135,7 +134,6 @@ sub inject_digest {
             my $digest_encoded = sign(digest_encode({
                 $DIGEST_KEY2_ACTION     => $form->attr('action'),
                 $DIGEST_KEY2_DIGEST     => $digest,
-                $DIGEST_KEY2_SESSION    => $sessid,
             }), $sessid);
             
             $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $digest_encoded));
@@ -167,10 +165,6 @@ sub validate_form {
     
     if (!$digest_wrapper) {
         return 'Digest hsa been tampered';
-    }
-    
-    if ($digest_wrapper->{$DIGEST_KEY2_SESSION} ne $sessid) {
-        return 'CSRF is detected';
     }
     
     my $digest = $digest_wrapper->{$DIGEST_KEY2_DIGEST};
