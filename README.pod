@@ -66,19 +66,19 @@ This also detects CSRF.
 
 =head2 CLASS METHODS
 
-=head3 inject_digest
+=head3 inject_rule
 
-Generates a digest strings of form structure for each forms in mojo response
+Generates a rule strings of form structure for each forms in mojo response
 and inject them into itself.
 
-    my $html = inject_digest($res, $charset,
+    my $html = inject_rule($res, $charset,
                                 ['/path1', '/path2'], $token_key, $session_id);
 
-=head3 validate_form
+=head3 validate
 
-Validates form data of given mojo request by given digest.
+Validates form data of given mojo request by given rule.
 
-    my $error = validate_form($req, $digest, $session_id);
+    my $error = validate($req, $rule, $session_id);
 
 =head1 AUTHOR
 
