@@ -8,16 +8,16 @@ use Mojo::JSON;
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
                                                         b64_decode b64_encode};
 
-my $DIGEST_KEY_NOT_REQUIRED = 0;
-my $DIGEST_KEY_MAXLENGTH    = 1;
-my $DIGEST_KEY_NOT_NULL     = 2;
-my $DIGEST_KEY_OPTIONS      = 3;
-my $DIGEST_KEY_PATTERN      = 4;
-my $DIGEST_KEY_MIN          = 5;
-my $DIGEST_KEY_MAX          = 6;
-my $DIGEST_KEY_TYPE         = 7;
-my $DIGEST_KEY2_ACTION      = 0;
-my $DIGEST_KEY2_DIGEST      = 1;
+my $RULE_KEY_NOT_REQUIRED = 0;
+my $RULE_KEY_MAXLENGTH    = 1;
+my $RULE_KEY_NOT_NULL     = 2;
+my $RULE_KEY_OPTIONS      = 3;
+my $RULE_KEY_PATTERN      = 4;
+my $RULE_KEY_MIN          = 5;
+my $RULE_KEY_MAX          = 6;
+my $RULE_KEY_TYPE         = 7;
+my $RULE_KEY2_ACTION      = 0;
+my $RULE_KEY2_RULES       = 1;
 
 my $json = Mojo::JSON->new;
 
@@ -27,7 +27,7 @@ my $json = Mojo::JSON->new;
 sub register {
     my ($self, $app, $options) = @_;
     
-    my $digest_key = $options->{namespace}. "-digest";
+    my $rule_key = $options->{namespace}. "-rule";
     
     my $actions =
         ref $options->{action} ? $options->{action} : [$options->{action}];
@@ -39,8 +39,8 @@ sub register {
         
         if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @$actions) {
             
-            my $token = $c->param($digest_key);
-            $req->params->remove($digest_key);
+            my $token = $c->param($rule_key);
+            $req->params->remove($rule_key);
             
             if (my $error = validate_form($req, $token, $c->session('sessid'))) {
                 return $options->{blackhole}->($c, $error);
@@ -56,18 +56,18 @@ sub register {
                 $sessid = hmac_sha1_sum(time(). {}. rand(), $$);
                 $c->session('sessid' => $sessid);
             }
-            $c->res->body(inject_digest(
+            $c->res->body(inject_rule(
                 $c->res->body,
                 $c->res->content->charset,
                 $actions,
-                $digest_key,
+                $rule_key,
                 $sessid,
             ));
         }
     });
 }
 
-sub inject_digest {
+sub inject_rule {
     my ($body, $charset, $actions, $token_key, $sessid) = @_;
     
     $body = decode($charset, $body) // $body if $charset;
@@ -75,68 +75,67 @@ sub inject_digest {
     
     for my $action (@$actions) {
         $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
-            my $form = shift;
-            my $digest = {};
+            my $form    = shift;
+            my $rules   = {};
             
             $form->find("*:not([disabled])[name]")->each(sub {
                 my $tag = shift;
                 my $type = $tag->attr('type');
                 my $name = $tag->attr('name');
-                $digest->{$name} ||= {};
+                $rules->{$name} ||= {};
                 
                 if (grep {$_ eq $type} qw{hidden checkbox radio submit image}) {
-                    push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}},
+                    push(@{$rules->{$name}->{$RULE_KEY_OPTIONS}},
                                                         $tag->attr('value'));
                 }
                 
                 if ($type eq 'submit' || $type eq 'image') {
-                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} //= 1;
+                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
                 } elsif ($type eq 'checkbox') {
-                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} //= 1;
+                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
                 } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
-                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} //= 1;
+                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
                 } elsif ($tag->type eq 'select') {
-                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} = 0;
+                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} = 0;
                     $tag->find('option')->each(sub {
-                        push(@{$digest->{$name}->{$DIGEST_KEY_OPTIONS}},
+                        push(@{$rules->{$name}->{$RULE_KEY_OPTIONS}},
                                                         shift->attr('value'));
                     });
                 } elsif ($type eq 'number') {
-                    $digest->{$name}->{$DIGEST_KEY_TYPE} = 'number';
+                    $rules->{$name}->{$RULE_KEY_TYPE} = 'number';
                     if (my $val = $tag->attr->{min}) {
-                        $digest->{$name}->{$DIGEST_KEY_MIN} = $val;
+                        $rules->{$name}->{$RULE_KEY_MIN} = $val;
                     }
                     if (my $val = $tag->attr->{max}) {
-                        $digest->{$name}->{$DIGEST_KEY_MAX} = $val;
+                        $rules->{$name}->{$RULE_KEY_MAX} = $val;
                     }
                 } else {
-                    $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED} = 0;
+                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} = 0;
                     my $maxlength = $tag->attr('maxlength');
                     if ($maxlength =~ /./) {
-                        $digest->{$name}->{$DIGEST_KEY_MAXLENGTH} =
-                                                            $maxlength;
+                        $rules->{$name}->{$RULE_KEY_MAXLENGTH} = $maxlength;
                     }
                 }
                 if (exists $tag->attr->{required}) {
-                    $digest->{$name}->{$DIGEST_KEY_NOT_NULL} = 1;
+                    $rules->{$name}->{$RULE_KEY_NOT_NULL} = 1;
                 }
                 if (my $val = $tag->attr->{pattern}) {
-                    $digest->{$name}->{$DIGEST_KEY_PATTERN} = $val;
+                    $rules->{$name}->{$RULE_KEY_PATTERN} = $val;
                 }
             });
             
-            for my $elem (values %$digest) {
-                if (! $elem->{$DIGEST_KEY_NOT_REQUIRED}) {
-                    delete $elem->{$DIGEST_KEY_NOT_REQUIRED}
+            for my $elem (values %$rules) {
+                if (! $elem->{$RULE_KEY_NOT_REQUIRED}) {
+                    delete $elem->{$RULE_KEY_NOT_REQUIRED}
                 }
             }
             
-            my $digest_encoded = sign(digest_encode({
-                $DIGEST_KEY2_ACTION     => $form->attr('action'),
-                $DIGEST_KEY2_DIGEST     => $digest,
+            my $rule_encoded = sign(rule_encode({
+                $RULE_KEY2_ACTION   => $form->attr('action'),
+                $RULE_KEY2_RULES    => $rules,
             }), $sessid);
             
-            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $digest_encoded));
+            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $rule_encoded));
 <div style="display:none">
     <input type="hidden" name="%s" value="%s">
 </div>
@@ -148,7 +147,7 @@ EOF
 }
 
 sub validate_form {
-    my ($req, $encoded_digest, $sessid) = @_;
+    my ($req, $encoded_rule, $sessid) = @_;
     
     if (! $sessid) {
         return 'CSRF is detected';
@@ -157,75 +156,75 @@ sub validate_form {
     my $params = $req->params;
     my $req_path = $req->url->path;
 
-    if (! $encoded_digest) {
-        return 'Digest is not found';
+    if (! $encoded_rule) {
+        return 'Rule is not found';
     }
     
-    my $digest_wrapper = digest_decode(unsign($encoded_digest, $sessid));
+    my $rule_wrapper = rule_decode(unsign($encoded_rule, $sessid));
     
-    if (!$digest_wrapper) {
-        return 'Digest hsa been tampered';
+    if (!$rule_wrapper) {
+        return 'Rule hsa been tampered';
     }
     
-    my $digest = $digest_wrapper->{$DIGEST_KEY2_DIGEST};
+    my $rules = $rule_wrapper->{$RULE_KEY2_RULES};
     
-    if ($req_path ne $digest_wrapper->{$DIGEST_KEY2_ACTION}) {
+    if ($req_path ne $rule_wrapper->{$RULE_KEY2_ACTION}) {
         return "Action attribute has been tampered";
     }
     
     for my $name ($params->param) {
-        if (! $digest->{$name}) {
+        if (! $rules->{$name}) {
             return "Field $name is injected";
         }
     }
-    for my $name (keys %{$digest}) {
+    for my $name (keys %$rules) {
         if (! grep {$_ eq $name} $params->param) {
-            if (! $digest->{$name}->{$DIGEST_KEY_NOT_REQUIRED}) {
+            if (! $rules->{$name}->{$RULE_KEY_NOT_REQUIRED}) {
                 return "Field $name is not given";
             }
         }
         
         my @params = $params->param($name);
         
-        if (my $allowed = $digest->{$name}->{$DIGEST_KEY_OPTIONS}) {
+        if (my $allowed = $rules->{$name}->{$RULE_KEY_OPTIONS}) {
             for my $given (@params) {
                 if (! grep {$_ eq $given} @$allowed) {
                     return "Field $name has been tampered";
                 }
             }
         }
-        if (exists $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
+        if (exists $rules->{$name}->{$RULE_KEY_MAXLENGTH}) {
             for my $given (@params) {
-                if (length($given) > $digest->{$name}->{$DIGEST_KEY_MAXLENGTH}) {
+                if (length($given) > $rules->{$name}->{$RULE_KEY_MAXLENGTH}) {
                     return "Field $name is too long";
                 }
             }
         }
-        if (defined $digest->{$name}->{$DIGEST_KEY_NOT_NULL}) {
+        if (defined $rules->{$name}->{$RULE_KEY_NOT_NULL}) {
             for my $given (@params) {
                 if (length($given) == 0) {
                     return "Field $name cannot be empty";
                 }
             }
         }
-        if (my $pattern = $digest->{$name}->{$DIGEST_KEY_PATTERN}) {
+        if (my $pattern = $rules->{$name}->{$RULE_KEY_PATTERN}) {
             for my $given (@params) {
                 if ($given !~ /\A$pattern\Z/) {
                     return "Field $name not match pattern";
                 }
             }
         }
-        if (($digest->{$name}->{$DIGEST_KEY_TYPE} || '') eq 'number') {
+        if (($rules->{$name}->{$RULE_KEY_TYPE} || '') eq 'number') {
             for my $given (@params) {
                 if ($given !~ /\A[\d\+\-\.]+\Z/) {
                     return "Field $name not match pattern";
                 }
-                if (my $min = $digest->{$name}->{$DIGEST_KEY_MIN}) {
+                if (my $min = $rules->{$name}->{$RULE_KEY_MIN}) {
                     if ($given < $min) {
                         return "Field $name too low";
                     }
                 }
-                if (my $max = $digest->{$name}->{$DIGEST_KEY_MAX}) {
+                if (my $max = $rules->{$name}->{$RULE_KEY_MAX}) {
                     if ($given > $max) {
                         return "Field $name too great";
                     }
@@ -236,11 +235,11 @@ sub validate_form {
     return;
 }
 
-sub digest_encode {
+sub rule_encode {
     return b64_encode($json->encode(shift), '');
 }
 
-sub digest_decode {
+sub rule_decode {
     return $json->decode(b64_decode(shift));
 }
 
@@ -331,19 +330,19 @@ This also detects CSRF.
 
 =head2 CLASS METHODS
 
-=head3 inject_digest
+=head3 inject_rule
 
-Generates a digest strings of form structure for each forms in mojo response
+Generates a rule strings of form structure for each forms in mojo response
 and inject them into itself.
 
-    my $html = inject_digest($res, $charset,
+    my $html = inject_rule($res, $charset,
                                 ['/path1', '/path2'], $token_key, $session_id);
 
 =head3 validate_form
 
-Validates form data of given mojo request by given digest.
+Validates form data of given mojo request by given rule.
 
-    my $error = validate_form($req, $digest, $session_id);
+    my $error = validate_form($req, $rule, $session_id);
 
 =head1 AUTHOR
 
