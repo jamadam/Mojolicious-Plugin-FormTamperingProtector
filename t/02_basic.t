@@ -363,13 +363,6 @@ $t->status_is(400);
 $t->content_like(qr{btn3});
 $t->content_like(qr{tampered});
 
-$t->post_ok('/receptor1' => form => {
-    foo => 'fooValue',
-    "$namespace-rule" => $token2,
-});
-$t->status_is(200);
-$t->content_is('post completed');
-
 $t->post_ok('/receptor2' => form => {
     foo => 'fooValue',
     bar => 'barValue',
@@ -386,15 +379,6 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{biz});
-$t->content_like(qr{injected});
-
-$t->post_ok('/receptor1' => form => {
-    foo => 'fooValue',
-    bar => 'barValue',
-    "$namespace-rule" => $token2,
-});
-$t->status_is(400);
-$t->content_like(qr{bar});
 $t->content_like(qr{injected});
 
 $t->post_ok('/receptor1' => form => {
@@ -454,6 +438,22 @@ $t->post_ok('/receptor1' => form => {
 $t->status_is(400);
 $t->content_like(qr{rule}i);
 $t->content_like(qr{tampered});
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    "$namespace-rule" => $token2,
+});
+$t->status_is(200);
+$t->content_is('post completed');
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    bar => 'barValue',
+    "$namespace-rule" => $token2,
+});
+$t->status_is(400);
+$t->content_like(qr{bar});
+$t->content_like(qr{injected});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue1',
@@ -594,6 +594,12 @@ $t->post_ok('/receptor1' => form => {
 $t->status_is(400);
 
 $t->post_ok('/receptor1' => form => {
+    foo => '',
+    "$namespace-rule" => $token12,
+});
+$t->status_is(400);
+
+$t->post_ok('/receptor1' => form => {
     foo => '7',
     "$namespace-rule" => $token13,
 });
@@ -626,12 +632,6 @@ $t->status_is(400);
 $t->post_ok('/receptor1' => form => {
     foo => ['6', 11],
     "$namespace-rule" => $token13,
-});
-$t->status_is(400);
-
-$t->post_ok('/receptor1' => form => {
-    foo => '',
-    "$namespace-rule" => $token12,
 });
 $t->status_is(400);
 
