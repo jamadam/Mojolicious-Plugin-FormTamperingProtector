@@ -8,7 +8,7 @@ use Mojo::JSON;
 
 my $TERM_ACTION              = 0;
 my $TERM_SCHEMA              = 1;
-my $TERM_PROPETIES           = 2;  # 'propeties'
+my $TERM_PROPERTIES          = 2;  # 'properties'
 my $TERM_REQUIRED            = 3;  # 'required'
 my $TERM_MAXLENGTH           = 4;  # 'maxLength'
 my $TERM_MIN_LENGTH          = 5;  # 'minLength'
@@ -81,7 +81,7 @@ my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-schem
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo', 'bar', 'baz'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {
+            $TERM_PROPERTIES => {
                 bar => {},
                 baz => {
                     $TERM_OPTIONS => ["bazValue"],
@@ -109,7 +109,7 @@ my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$namespace-sche
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {
+            $TERM_PROPERTIES => {
                 "foo" => {},
             },
         },
@@ -127,7 +127,7 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-sche
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => [],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 "foo" => {
                     $TERM_OPTIONS => ["fooValue1", "fooValue2", "fooValue3", "fooValue4"],
                 },
@@ -144,7 +144,7 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-sche
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => [],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 foo => {
                     $TERM_OPTIONS => ["fooValue1","fooValue2","fooValue3","fooValue4"],
                 },
@@ -164,7 +164,7 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-sche
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 foo => {
                     $TERM_OPTIONS => ['', "fooValue1", "fooValue2"],
                 },
@@ -181,7 +181,7 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-sche
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo1','foo2','foo3'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 foo1 => {
                     $TERM_MAXLENGTH => 32,
                 },
@@ -202,7 +202,7 @@ my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-sche
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo1'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {
+            $TERM_PROPERTIES => {
                 foo1 => {
                     $TERM_MIN_LENGTH => 1,
                 },
@@ -219,7 +219,7 @@ my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-sch
         $TERM_SCHEMA => {
             $TERM_REQUIRED => ['foo'],
             $TERM_ADD_PROPS     => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 foo => {
                     $TERM_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
                 },
@@ -236,7 +236,7 @@ my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 foo => {
                     $TERM_OPTIONS => [
                         '', 'fooValue1', 'fooValue2', 'a"b', 'a/b',
@@ -255,7 +255,7 @@ my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 foo => {
                     $TERM_PATTERN => "\\d\\d\\d",
                 },
@@ -272,7 +272,7 @@ my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES=> {
+            $TERM_PROPERTIES=> {
                 foo => {
                     $TERM_MIN => "5",
                     $TERM_MAX => "10",
@@ -291,7 +291,7 @@ my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => [],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {},
+            $TERM_PROPERTIES => {},
         },
     };
 }
@@ -304,7 +304,7 @@ my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo','bar'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {
+            $TERM_PROPERTIES => {
                 foo => {},
                 bar => {},
             },
@@ -320,7 +320,7 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {
+            $TERM_PROPERTIES => {
                 foo => {
                     $TERM_OPTIONS => ['value1', 'value2'],
                 },
@@ -337,7 +337,7 @@ my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => ['foo'],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {
+            $TERM_PROPERTIES => {
                 foo => {
                     $TERM_OPTIONS => ['やったー'],
                 },
@@ -354,7 +354,7 @@ my $token18 = $t->tx->res->dom->find('form')->[17]->at("input[name=$namespace-sc
         $TERM_SCHEMA => {
             $TERM_REQUIRED  => [],
             $TERM_ADD_PROPS => Mojo::JSON->false,
-            $TERM_PROPETIES => {
+            $TERM_PROPERTIES => {
                 foo => {
                     $TERM_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
                 },

@@ -10,7 +10,7 @@ use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
 
 my $TERM_ACTION             = 0;
 my $TERM_SCHEMA             = 1;
-my $TERM_PROPETIES          = 2;  # 'propeties'
+my $TERM_PROPERTIES         = 2;  # 'properties'
 my $TERM_REQUIRED           = 3;  # 'required'
 my $TERM_MAXLENGTH          = 4;  # 'maxLength'
 my $TERM_MIN_LENGTH         = 5;  # 'minLength'
@@ -153,7 +153,7 @@ sub extract_schema {
     });
     
     return {
-        $TERM_PROPETIES => $props,
+        $TERM_PROPERTIES => $props,
         $TERM_REQUIRED  => [unique_grep(\@required)],
         $TERM_ADD_PROPS => Mojo::JSON->false,
     };
@@ -179,7 +179,7 @@ sub validate {
         return 'Schema has been tampered';
     }
     
-    my $props = $wrapper->{$TERM_SCHEMA}->{$TERM_PROPETIES};
+    my $props = $wrapper->{$TERM_SCHEMA}->{$TERM_PROPERTIES};
     
     if ($req_path ne $wrapper->{$TERM_ACTION}) {
         return "Action attribute has been tampered";
