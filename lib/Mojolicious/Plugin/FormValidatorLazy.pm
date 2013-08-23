@@ -10,7 +10,7 @@ use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
 
 my $KEY_ACTION            = 0;
 my $KEY_RULES             = 1;
-my $RULE_KEY_NOT_REQUIRED = 0;
+my $KEY_REQUIRED          = 2;
 my $RULE_KEY_MAXLENGTH    = 1;
 my $RULE_KEY_NOT_NULL     = 2;
 my $RULE_KEY_OPTIONS      = 3;
@@ -79,6 +79,7 @@ sub inject_rule {
         $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
             my $form    = shift;
             my $rules   = {};
+            my @required;
             
             $form->find("*[name]")->each(sub {
                 my $tag = shift;
@@ -91,21 +92,14 @@ sub inject_rule {
                                                         $tag->attr('value'));
                 }
                 
-                if (exists $tag->attr->{disabled}) {
-                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
-                } elsif ($type eq 'submit' || $type eq 'image') {
-                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
-                } elsif ($type eq 'checkbox') {
-                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
-                } elsif ($type eq 'radio' && ! exists $tag->attr->{checked}) {
-                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
-                } elsif ($tag->type eq 'select') {
-                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} = 0;
+                if ($tag->type eq 'select') {
                     $tag->find('option')->each(sub {
                         push(@{$rules->{$name}->{$RULE_KEY_OPTIONS}},
                                                         shift->attr('value'));
                     });
-                } elsif ($type eq 'number') {
+                }
+                
+                if ($type eq 'number') {
                     $rules->{$name}->{$RULE_KEY_TYPE} = 'number';
                     if (my $val = $tag->attr->{min}) {
                         $rules->{$name}->{$RULE_KEY_MIN} = $val;
@@ -113,30 +107,34 @@ sub inject_rule {
                     if (my $val = $tag->attr->{max}) {
                         $rules->{$name}->{$RULE_KEY_MAX} = $val;
                     }
-                } else {
-                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} = 0;
-                    my $maxlength = $tag->attr('maxlength');
-                    if ($maxlength =~ /./) {
-                        $rules->{$name}->{$RULE_KEY_MAXLENGTH} = $maxlength;
-                    }
                 }
+                
+                if (! exists $tag->attr->{disabled} &&
+                                $type ne 'submit' &&
+                                $type ne 'image' &&
+                                $type ne 'checkbox' &&
+                        ($type ne 'radio' || exists $tag->attr->{checked})) {
+                    push(@required, $name);
+                }
+                    
+                my $maxlength = $tag->attr('maxlength');
+                if ($maxlength =~ /./) {
+                    $rules->{$name}->{$RULE_KEY_MAXLENGTH} = $maxlength;
+                }
+                
                 if (exists $tag->attr->{required}) {
                     $rules->{$name}->{$RULE_KEY_NOT_NULL} = 1;
                 }
+                
                 if (my $val = $tag->attr->{pattern}) {
                     $rules->{$name}->{$RULE_KEY_PATTERN} = $val;
                 }
             });
             
-            for my $elem (values %$rules) {
-                if (! $elem->{$RULE_KEY_NOT_REQUIRED}) {
-                    delete $elem->{$RULE_KEY_NOT_REQUIRED}
-                }
-            }
-            
             my $rule_encoded = sign(rule_encode({
                 $KEY_ACTION   => $form->attr('action'),
                 $KEY_RULES    => $rules,
+                $KEY_REQUIRED => [unique_grep(\@required)],
             }), $sessid);
             
             $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $rule_encoded));
@@ -181,12 +179,14 @@ sub validate {
             return "Field $name is injected";
         }
     }
-    for my $name (keys %$rules) {
-        if (! grep {$_ eq $name} $params->param) {
-            if (! $rules->{$name}->{$RULE_KEY_NOT_REQUIRED}) {
-                return "Field $name is not given";
-            }
+    
+    for my $required (@{$rule_wrapper->{$KEY_REQUIRED}}) {
+        if (! defined $params->param($required)) {
+            return "Field $required is required";
         }
+    }
+    
+    for my $name (keys %$rules) {
         
         my @params = $params->param($name);
         
@@ -260,6 +260,11 @@ sub unsign {
             return $signed;
         }
     }
+}
+
+sub unique_grep {
+    my %hash;
+    return grep {!$hash{$_}++} @{$_[0]};
 }
 
 1;

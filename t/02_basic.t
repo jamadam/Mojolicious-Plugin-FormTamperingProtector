@@ -7,7 +7,7 @@ use Mojo::Util qw{b64_decode};
 
 my $KEY_ACTION            = 0;
 my $KEY_RULES             = 1;
-my $RULE_KEY_NOT_REQUIRED = 0;
+my $KEY_REQUIRED     	  = 2;
 my $RULE_KEY_MAXLENGTH    = 1;
 my $RULE_KEY_NOT_NULL     = 2;
 my $RULE_KEY_OPTIONS      = 3;
@@ -74,6 +74,7 @@ my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-rule]
     my $rule = rule_decode(unsign($token, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo', 'bar', 'baz'],
         $KEY_RULES    => {
             bar => {},
             baz => {
@@ -81,15 +82,12 @@ my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-rule]
             },
             foo => {},
             yada => {
-                $RULE_KEY_NOT_REQUIRED => 1,
                 $RULE_KEY_OPTIONS => ["yadaValue"],
             },
             btn => {
-                $RULE_KEY_NOT_REQUIRED => 1,
                 $RULE_KEY_OPTIONS => ["send", "send2"],
             },
             btn3 => {
-                $RULE_KEY_NOT_REQUIRED => 1,
                 $RULE_KEY_OPTIONS => ["send3"],
             },
         },
@@ -101,6 +99,7 @@ my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$namespace-rule
     my $rule = rule_decode(unsign($token2, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES     => {
             "foo" => {},
         },
@@ -115,9 +114,9 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-rule
     my $rule = rule_decode(unsign($token4, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => [],
         $KEY_RULES    => {
             "foo" => {
-                $RULE_KEY_NOT_REQUIRED => 1,
                 $RULE_KEY_OPTIONS => ["fooValue1", "fooValue2", "fooValue3", "fooValue4"],
             },
         },
@@ -129,9 +128,9 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-rule
     my $rule = rule_decode(unsign($token5, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => [],
         $KEY_RULES    => {
             foo => {
-                $RULE_KEY_NOT_REQUIRED => 1,
                 $RULE_KEY_OPTIONS => ["fooValue1","fooValue2","fooValue3","fooValue4"],
             },
         },
@@ -146,6 +145,7 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-rule
     my $rule = rule_decode(unsign($token7, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_OPTIONS => ['', "fooValue1", "fooValue2"],
@@ -159,6 +159,7 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-rule
     my $rule = rule_decode(unsign($token8, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo1','foo2','foo3'],
         $KEY_RULES    => {
             foo1 => {
                 $RULE_KEY_MAXLENGTH => 32,
@@ -176,6 +177,7 @@ my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-rule
     my $rule = rule_decode(unsign($token9, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo1'],
         $KEY_RULES    => {
             foo1 => {
                 $RULE_KEY_NOT_NULL => 1,
@@ -189,6 +191,7 @@ my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-rul
     my $rule = rule_decode(unsign($token10, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
@@ -202,6 +205,7 @@ my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token11, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_OPTIONS => [
@@ -217,6 +221,7 @@ my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token12, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_PATTERN => "\\d\\d\\d",
@@ -230,6 +235,7 @@ my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token13, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_MIN => "5",
@@ -245,6 +251,7 @@ my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token14, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor3',
+		$KEY_REQUIRED => [],
         $KEY_RULES    => {},
     };
 }
@@ -254,6 +261,7 @@ my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token15, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo','bar'],
         $KEY_RULES    => {
             foo => {},
             bar => {},
@@ -266,6 +274,7 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token16, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_OPTIONS => ['value1', 'value2'],
@@ -279,6 +288,7 @@ my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token17, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => ['foo'],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_OPTIONS => ['やったー'],
@@ -292,10 +302,10 @@ my $token18 = $t->tx->res->dom->find('form')->[17]->at("input[name=$namespace-ru
     my $rule = rule_decode(unsign($token18, $sessid));
     is_deeply $rule, {
         $KEY_ACTION   => '/receptor1',
+		$KEY_REQUIRED => [],
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
-                $RULE_KEY_NOT_REQUIRED => 1,
             },
         },
     }, 'right rule';
