@@ -81,15 +81,12 @@ sub inject_schema {
     for my $action (@$actions) {
         $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
             my $form    = shift;
-            my ($propeties, $required) = extract_propeties($form, $charset);
-            my $schema_encoded = sign(schema_encode({
-                $TERM_ACTION     => $form->attr('action'),
-                $TERM_PROPETIES  => $propeties,
-                $TERM_REQUIRED   => $required,
-                $TERM_ADD_PROPS  => Mojo::JSON->false,
+            my $wrapper = sign(schema_encode({
+                $TERM_ACTION    => $form->attr('action'),
+                $TERM_SCHEMA    => extract_propeties($form, $charset),
             }), $sessid);
             
-            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $schema_encoded));
+            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));
 <div style="display:none">
     <input type="hidden" name="%s" value="%s">
 </div>
@@ -155,7 +152,11 @@ sub extract_propeties {
         }
     });
     
-    return $props, [unique_grep(\@required)];
+    return {
+        $TERM_PROPETIES => $props,
+        $TERM_REQUIRED  => [unique_grep(\@required)],
+        $TERM_ADD_PROPS => Mojo::JSON->false,
+    };
 }
 
 sub validate {
@@ -172,19 +173,19 @@ sub validate {
         return 'Schema is not found';
     }
     
-    my $schema_wrapper = schema_decode(unsign($encoded_schema, $sessid));
+    my $wrapper = schema_decode(unsign($encoded_schema, $sessid));
     
-    if (!$schema_wrapper) {
-        return 'Schema hsa been tampered';
+    if (!$wrapper) {
+        return 'Schema has been tampered';
     }
     
-    my $props = $schema_wrapper->{$TERM_PROPETIES};
+    my $props = $wrapper->{$TERM_SCHEMA}->{$TERM_PROPETIES};
     
-    if ($req_path ne $schema_wrapper->{$TERM_ACTION}) {
+    if ($req_path ne $wrapper->{$TERM_ACTION}) {
         return "Action attribute has been tampered";
     }
     
-    if (! $schema_wrapper->{$TERM_ADD_PROPS}) {
+    if (! $wrapper->{$TERM_SCHEMA}->{$TERM_ADD_PROPS}) {
         for my $name ($params->param) {
             if (! $props->{$name}) {
                 return "Field $name is injected";
@@ -192,7 +193,7 @@ sub validate {
         }
     }
     
-    for my $required (@{$schema_wrapper->{$TERM_REQUIRED}}) {
+    for my $required (@{$wrapper->{$TERM_SCHEMA}->{$TERM_REQUIRED}}) {
         if (! defined $params->param($required)) {
             return "Field $required is required";
         }

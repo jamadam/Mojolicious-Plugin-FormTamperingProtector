@@ -78,22 +78,24 @@ my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-schem
     my $schema = schema_decode(unsign($token, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo', 'bar', 'baz'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {
-            bar => {},
-            baz => {
-                $TERM_OPTIONS => ["bazValue"],
-            },
-            foo => {},
-            yada => {
-                $TERM_OPTIONS => ["yadaValue"],
-            },
-            btn => {
-                $TERM_OPTIONS => ["send", "send2"],
-            },
-            btn3 => {
-                $TERM_OPTIONS => ["send3"],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo', 'bar', 'baz'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {
+                bar => {},
+                baz => {
+                    $TERM_OPTIONS => ["bazValue"],
+                },
+                foo => {},
+                yada => {
+                    $TERM_OPTIONS => ["yadaValue"],
+                },
+                btn => {
+                    $TERM_OPTIONS => ["send", "send2"],
+                },
+                btn3 => {
+                    $TERM_OPTIONS => ["send3"],
+                },
             },
         },
     };
@@ -104,10 +106,12 @@ my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$namespace-sche
     my $schema = schema_decode(unsign($token2, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {
-            "foo" => {},
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {
+                "foo" => {},
+            },
         },
     }, 'right schema';
 }
@@ -120,11 +124,13 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-sche
     my $schema = schema_decode(unsign($token4, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => [],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            "foo" => {
-                $TERM_OPTIONS => ["fooValue1", "fooValue2", "fooValue3", "fooValue4"],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => [],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                "foo" => {
+                    $TERM_OPTIONS => ["fooValue1", "fooValue2", "fooValue3", "fooValue4"],
+                },
             },
         },
     }, 'right schema';
@@ -135,11 +141,13 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-sche
     my $schema = schema_decode(unsign($token5, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => [],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            foo => {
-                $TERM_OPTIONS => ["fooValue1","fooValue2","fooValue3","fooValue4"],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => [],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                foo => {
+                    $TERM_OPTIONS => ["fooValue1","fooValue2","fooValue3","fooValue4"],
+                },
             },
         },
     }, 'right schema';
@@ -153,11 +161,13 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-sche
     my $schema = schema_decode(unsign($token7, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            foo => {
-                $TERM_OPTIONS => ['', "fooValue1", "fooValue2"],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                foo => {
+                    $TERM_OPTIONS => ['', "fooValue1", "fooValue2"],
+                },
             },
         },
     }, 'right schema';
@@ -168,17 +178,19 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-sche
     my $schema = schema_decode(unsign($token8, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo1','foo2','foo3'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            foo1 => {
-                $TERM_MAXLENGTH => 32,
-            },
-            foo2 => {
-                $TERM_MAXLENGTH => 0,
-            },
-            foo3 => {},
-        }
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo1','foo2','foo3'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                foo1 => {
+                    $TERM_MAXLENGTH => 32,
+                },
+                foo2 => {
+                    $TERM_MAXLENGTH => 0,
+                },
+                foo3 => {},
+            }
+        },
     }, 'right schema';
 }
 
@@ -187,11 +199,13 @@ my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-sche
     my $schema = schema_decode(unsign($token9, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo1'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {
-            foo1 => {
-                $TERM_MIN_LENGTH => 1,
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo1'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {
+                foo1 => {
+                    $TERM_MIN_LENGTH => 1,
+                },
             },
         },
     }, 'right schema';
@@ -202,11 +216,13 @@ my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-sch
     my $schema = schema_decode(unsign($token10, $sessid));
     is_deeply $schema, {
         $TERM_ACTION   => '/receptor1',
-        $TERM_REQUIRED => ['foo'],
-        $TERM_ADD_PROPS     => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            foo => {
-                $TERM_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED => ['foo'],
+            $TERM_ADD_PROPS     => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                foo => {
+                    $TERM_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
+                },
             },
         },
     }, 'right schema';
@@ -217,13 +233,15 @@ my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token11, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            foo => {
-                $TERM_OPTIONS => [
-                    '', 'fooValue1', 'fooValue2', 'a"b', 'a/b',
-                ],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                foo => {
+                    $TERM_OPTIONS => [
+                        '', 'fooValue1', 'fooValue2', 'a"b', 'a/b',
+                    ],
+                },
             },
         },
     }, 'right schema';
@@ -234,11 +252,13 @@ my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token12, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            foo => {
-                $TERM_PATTERN => "\\d\\d\\d",
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                foo => {
+                    $TERM_PATTERN => "\\d\\d\\d",
+                },
             },
         },
     }, 'right schema';
@@ -249,13 +269,15 @@ my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token13, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES=> {
-            foo => {
-                $TERM_MIN => "5",
-                $TERM_MAX => "10",
-                $TERM_TYPE => $TERM_NUMBER,
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES=> {
+                foo => {
+                    $TERM_MIN => "5",
+                    $TERM_MAX => "10",
+                    $TERM_TYPE => $TERM_NUMBER,
+                },
             },
         },
     }, 'right schema';
@@ -266,9 +288,11 @@ my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token14, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor3',
-        $TERM_REQUIRED  => [],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {},
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => [],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {},
+        },
     };
 }
 
@@ -277,11 +301,13 @@ my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token15, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo','bar'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {
-            foo => {},
-            bar => {},
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo','bar'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {
+                foo => {},
+                bar => {},
+            },
         },
     }, 'right schema';
 }
@@ -291,11 +317,13 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token16, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {
-            foo => {
-                $TERM_OPTIONS => ['value1', 'value2'],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {
+                foo => {
+                    $TERM_OPTIONS => ['value1', 'value2'],
+                },
             },
         },
     }, 'right schema';
@@ -306,11 +334,13 @@ my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token17, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => ['foo'],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {
-            foo => {
-                $TERM_OPTIONS => ['やったー'],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => ['foo'],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {
+                foo => {
+                    $TERM_OPTIONS => ['やったー'],
+                },
             },
         },
     }, 'right schema';
@@ -321,11 +351,13 @@ my $token18 = $t->tx->res->dom->find('form')->[17]->at("input[name=$namespace-sc
     my $schema = schema_decode(unsign($token18, $sessid));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
-        $TERM_REQUIRED  => [],
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-        $TERM_PROPETIES => {
-            foo => {
-                $TERM_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
+        $TERM_SCHEMA => {
+            $TERM_REQUIRED  => [],
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPETIES => {
+                foo => {
+                    $TERM_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
+                },
             },
         },
     }, 'right schema';
