@@ -8,16 +8,19 @@ use Mojo::JSON;
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
                                                         b64_decode b64_encode};
 
-my $KEY_ACTION      = 0;
-my $KEY_PROPETIES   = 1;
-my $KEY_REQUIRED    = 2;
-my $KEY_MAXLENGTH   = 1;
-my $KEY_NOT_NULL    = 2;
-my $KEY_OPTIONS     = 3;
-my $KEY_PATTERN     = 4;
-my $KEY_MIN         = 5;
-my $KEY_MAX         = 6;
-my $KEY_TYPE        = 7;
+my $TERM_ACTION             = 0;
+my $TERM_SCHEMA             = 1;
+my $TERM_PROPETIES          = 2;  # 'propeties'
+my $TERM_REQUIRED           = 3;  # 'required'
+my $TERM_MAXLENGTH          = 4;  # 'maxLength'
+my $TERM_MIN_LENGTH         = 5;  # 'minLength'
+my $TERM_OPTIONS            = 6;  # 'options'
+my $TERM_PATTERN            = 7;  # 'pattern'
+my $TERM_MIN                = 8;  # 'maximam'
+my $TERM_MAX                = 9;  # 'minimum'
+my $TERM_TYPE               = 10; # 'type'
+my $TERM_ADD_PROPS          = 11; # 'additionalProperties'
+my $TERM_NUMBER             = 12; # 'number'
 
 my $json = Mojo::JSON->new;
 
@@ -80,9 +83,10 @@ sub inject_schema {
             my $form    = shift;
             my ($propeties, $required) = extract_propeties($form, $charset);
             my $schema_encoded = sign(schema_encode({
-                $KEY_ACTION   => $form->attr('action'),
-                $KEY_PROPETIES=> $propeties,
-                $KEY_REQUIRED => $required,
+                $TERM_ACTION     => $form->attr('action'),
+                $TERM_PROPETIES  => $propeties,
+                $TERM_REQUIRED   => $required,
+                $TERM_ADD_PROPS  => Mojo::JSON->false,
             }), $sessid);
             
             $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $schema_encoded));
@@ -112,22 +116,22 @@ sub extract_propeties {
         $props->{$name} ||= {};
         
         if (grep {$_ eq $type} qw{hidden checkbox radio submit image}) {
-            push(@{$props->{$name}->{$KEY_OPTIONS}}, $tag->attr('value'));
+            push(@{$props->{$name}->{$TERM_OPTIONS}}, $tag->attr('value'));
         }
         
         if ($tag->type eq 'select') {
             $tag->find('option')->each(sub {
-                push(@{$props->{$name}->{$KEY_OPTIONS}}, shift->attr('value'));
+                push(@{$props->{$name}->{$TERM_OPTIONS}}, shift->attr('value'));
             });
         }
         
         if ($type eq 'number') {
-            $props->{$name}->{$KEY_TYPE} = 'number';
+            $props->{$name}->{$TERM_TYPE} = $TERM_NUMBER;
             if (my $val = $tag->attr->{min}) {
-                $props->{$name}->{$KEY_MIN} = $val;
+                $props->{$name}->{$TERM_MIN} = $val;
             }
             if (my $val = $tag->attr->{max}) {
-                $props->{$name}->{$KEY_MAX} = $val;
+                $props->{$name}->{$TERM_MAX} = $val;
             }
         }
         
@@ -139,15 +143,15 @@ sub extract_propeties {
             
         my $maxlength = $tag->attr('maxlength');
         if ($maxlength =~ /./) {
-            $props->{$name}->{$KEY_MAXLENGTH} = $maxlength;
+            $props->{$name}->{$TERM_MAXLENGTH} = $maxlength;
         }
         
         if (exists $tag->attr->{required}) {
-            $props->{$name}->{$KEY_NOT_NULL} = 1;
+            $props->{$name}->{$TERM_MIN_LENGTH} = 1;
         }
         
         if (my $val = $tag->attr->{pattern}) {
-            $props->{$name}->{$KEY_PATTERN} = $val;
+            $props->{$name}->{$TERM_PATTERN} = $val;
         }
     });
     
@@ -174,19 +178,21 @@ sub validate {
         return 'Schema hsa been tampered';
     }
     
-    my $props = $schema_wrapper->{$KEY_PROPETIES};
+    my $props = $schema_wrapper->{$TERM_PROPETIES};
     
-    if ($req_path ne $schema_wrapper->{$KEY_ACTION}) {
+    if ($req_path ne $schema_wrapper->{$TERM_ACTION}) {
         return "Action attribute has been tampered";
     }
     
-    for my $name ($params->param) {
-        if (! $props->{$name}) {
-            return "Field $name is injected";
+    if (! $schema_wrapper->{$TERM_ADD_PROPS}) {
+        for my $name ($params->param) {
+            if (! $props->{$name}) {
+                return "Field $name is injected";
+            }
         }
     }
     
-    for my $required (@{$schema_wrapper->{$KEY_REQUIRED}}) {
+    for my $required (@{$schema_wrapper->{$TERM_REQUIRED}}) {
         if (! defined $params->param($required)) {
             return "Field $required is required";
         }
@@ -196,45 +202,45 @@ sub validate {
         
         my @params = $params->param($name);
         
-        if (my $allowed = $props->{$name}->{$KEY_OPTIONS}) {
+        if (my $allowed = $props->{$name}->{$TERM_OPTIONS}) {
             for my $given (@params) {
                 if (! grep {$_ eq $given} @$allowed) {
                     return "Field $name has been tampered";
                 }
             }
         }
-        if (exists $props->{$name}->{$KEY_MAXLENGTH}) {
+        if (exists $props->{$name}->{$TERM_MAXLENGTH}) {
             for my $given (@params) {
-                if (length($given) > $props->{$name}->{$KEY_MAXLENGTH}) {
+                if (length($given) > $props->{$name}->{$TERM_MAXLENGTH}) {
                     return "Field $name is too long";
                 }
             }
         }
-        if (defined $props->{$name}->{$KEY_NOT_NULL}) {
+        if (defined $props->{$name}->{$TERM_MIN_LENGTH}) {
             for my $given (@params) {
-                if (length($given) == 0) {
+                if (length($given) < $props->{$name}->{$TERM_MIN_LENGTH}) {
                     return "Field $name cannot be empty";
                 }
             }
         }
-        if (my $pattern = $props->{$name}->{$KEY_PATTERN}) {
+        if (my $pattern = $props->{$name}->{$TERM_PATTERN}) {
             for my $given (@params) {
                 if ($given !~ /\A$pattern\Z/) {
                     return "Field $name not match pattern";
                 }
             }
         }
-        if (($props->{$name}->{$KEY_TYPE} || '') eq 'number') {
+        if (($props->{$name}->{$TERM_TYPE} || '') eq $TERM_NUMBER) {
             for my $given (@params) {
                 if ($given !~ /\A[\d\+\-\.]+\Z/) {
                     return "Field $name not match pattern";
                 }
-                if (my $min = $props->{$name}->{$KEY_MIN}) {
+                if (my $min = $props->{$name}->{$TERM_MIN}) {
                     if ($given < $min) {
                         return "Field $name too low";
                     }
                 }
-                if (my $max = $props->{$name}->{$KEY_MAX}) {
+                if (my $max = $props->{$name}->{$TERM_MAX}) {
                     if ($given > $max) {
                         return "Field $name too great";
                     }
