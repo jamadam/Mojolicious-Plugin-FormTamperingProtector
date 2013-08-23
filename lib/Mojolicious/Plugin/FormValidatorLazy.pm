@@ -81,7 +81,7 @@ sub inject_schema {
     for my $action (@$actions) {
         $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
             my $form    = shift;
-            my $wrapper = sign(schema_encode({
+            my $wrapper = sign(serialize({
                 $TERM_ACTION    => $form->attr('action'),
                 $TERM_SCHEMA    => extract_schema($form, $charset),
             }), $sessid);
@@ -173,7 +173,7 @@ sub validate {
         return 'Schema is not found';
     }
     
-    my $wrapper = schema_decode(unsign($encoded_schema, $sessid));
+    my $wrapper = deserialize(unsign($encoded_schema, $sessid));
     
     if (!$wrapper) {
         return 'Schema has been tampered';
@@ -252,11 +252,11 @@ sub validate {
     return;
 }
 
-sub schema_encode {
+sub serialize {
     return b64_encode($json->encode(shift), '');
 }
 
-sub schema_decode {
+sub deserialize {
     return $json->decode(b64_decode(shift));
 }
 
