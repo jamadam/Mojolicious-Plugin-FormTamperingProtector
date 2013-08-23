@@ -5,7 +5,7 @@
                 <input type="text" name="foo" value="fooValue">
                 <input type="text" name="bar" value="barValue">
                 <input type="hidden" name="baz" value="bazValue">
-                <input type="hidden" name="baz" value="bazValue" disabled="disabled">
+                <input type="hidden" name="yada" value="yadaValue" disabled="disabled">
                 <input type="submit" name='btn' value="send">
                 <input type="submit" name='btn' value="send2">
                 <input type="submit" name='btn3' value="send3">
@@ -25,15 +25,19 @@
         </form>
         <form action="/receptor1" method="post">
             <div>
-                <input type="radio" name="foo" value="fooValue1">
+                <input type="radio" name="foo" value="fooValue1" disabled="disabled">
                 <input type="radio" name="foo" value="fooValue2">
+                <input type="radio" name="foo" value="fooValue3">
+                <input type="radio" name="foo" value="fooValue4" disabled="disabled">
                 <input type="submit" value="send">
             </div>
         </form>
         <form action="/receptor1" method="post">
             <div>
-                <input type="checkbox" name="foo" value="fooValue1">
+                <input type="checkbox" name="foo" value="fooValue1" disabled="disabled">
                 <input type="checkbox" name="foo" value="fooValue2">
+                <input type="checkbox" name="foo" value="fooValue3">
+                <input type="checkbox" name="foo" value="fooValue4" disabled="disabled">
                 <input type="submit" value="send">
             </div>
         </form>
@@ -119,6 +123,14 @@
         <form action="/receptor1" method="post">
             <div>
                 <input type="hidden" name="foo" value="やったー">
+            </div>
+        </form>
+        <form action="/receptor1" method="post">
+            <div>
+                <input type="radio" name="foo" value="fooValue1">
+                <input type="radio" name="foo" value="fooValue2" checked disabled="disabled">
+                <input type="radio" name="foo" value="fooValue3">
+                <input type="submit" value="send">
             </div>
         </form>
         <span id="jp">やったー</span>

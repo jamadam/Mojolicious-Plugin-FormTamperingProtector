@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 172;
+use Test::More tests => 181;
 use Data::Dumper;
 use Mojo::Util qw{b64_decode};
 
@@ -80,6 +80,10 @@ my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-rule]
                 $RULE_KEY_OPTIONS => ["bazValue"],
             },
             foo => {},
+            yada => {
+                $RULE_KEY_NOT_REQUIRED => 1,
+                $RULE_KEY_OPTIONS => ["yadaValue"],
+            },
             btn => {
                 $RULE_KEY_NOT_REQUIRED => 1,
                 $RULE_KEY_OPTIONS => ["send", "send2"],
@@ -114,7 +118,7 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-rule
         $KEY_RULES    => {
             "foo" => {
                 $RULE_KEY_NOT_REQUIRED => 1,
-                $RULE_KEY_OPTIONS => ["fooValue1", "fooValue2"],
+                $RULE_KEY_OPTIONS => ["fooValue1", "fooValue2", "fooValue3", "fooValue4"],
             },
         },
     }, 'right rule';
@@ -128,7 +132,7 @@ my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-rule
         $KEY_RULES    => {
             foo => {
                 $RULE_KEY_NOT_REQUIRED => 1,
-                $RULE_KEY_OPTIONS => ["fooValue1","fooValue2"],
+                $RULE_KEY_OPTIONS => ["fooValue1","fooValue2","fooValue3","fooValue4"],
             },
         },
     }, 'right rule';
@@ -283,12 +287,36 @@ my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-ru
     }, 'right rule';
 }
 
+my $token18 = $t->tx->res->dom->find('form')->[17]->at("input[name=$namespace-rule]")->attr('value');
+{
+    my $rule = rule_decode(unsign($token18, $sessid));
+    is_deeply $rule, {
+        $KEY_ACTION   => '/receptor1',
+        $KEY_RULES    => {
+            foo => {
+                $RULE_KEY_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
+                $RULE_KEY_NOT_REQUIRED => 1,
+            },
+        },
+    }, 'right rule';
+}
+
 $t->text_is("#jp", 'やったー');
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
     bar => 'barValue',
     baz => 'bazValue',
+    "$namespace-rule" => $token,
+});
+$t->status_is(200);
+$t->content_is('post completed');
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    bar => 'barValue',
+    baz => 'bazValue',
+    yada => 'yadaValue',
     "$namespace-rule" => $token,
 });
 $t->status_is(200);
@@ -385,6 +413,17 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{baz});
+$t->content_like(qr{tampered});
+
+$t->post_ok('/receptor1' => form => {
+    foo => 'fooValue',
+    bar => 'barValue',
+    baz => 'bazValue',
+    yada => 'yadaValue-tampered!',
+    "$namespace-rule" => $token,
+});
+$t->status_is(400);
+$t->content_like(qr{yada});
 $t->content_like(qr{tampered});
 
 $t->post_ok('/receptor1' => form => {

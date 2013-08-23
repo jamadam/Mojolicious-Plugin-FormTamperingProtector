@@ -80,7 +80,7 @@ sub inject_rule {
             my $form    = shift;
             my $rules   = {};
             
-            $form->find("*:not([disabled])[name]")->each(sub {
+            $form->find("*[name]")->each(sub {
                 my $tag = shift;
                 my $type = $tag->attr('type');
                 my $name = $tag->attr('name');
@@ -91,7 +91,9 @@ sub inject_rule {
                                                         $tag->attr('value'));
                 }
                 
-                if ($type eq 'submit' || $type eq 'image') {
+                if (exists $tag->attr->{disabled}) {
+                    $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
+                } elsif ($type eq 'submit' || $type eq 'image') {
                     $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
                 } elsif ($type eq 'checkbox') {
                     $rules->{$name}->{$RULE_KEY_NOT_REQUIRED} //= 1;
