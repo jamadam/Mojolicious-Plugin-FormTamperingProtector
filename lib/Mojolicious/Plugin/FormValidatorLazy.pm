@@ -83,7 +83,7 @@ sub inject_schema {
             my $form    = shift;
             my $wrapper = sign(schema_encode({
                 $TERM_ACTION    => $form->attr('action'),
-                $TERM_SCHEMA    => extract_propeties($form, $charset),
+                $TERM_SCHEMA    => extract_schema($form, $charset),
             }), $sessid);
             
             $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));
@@ -97,7 +97,7 @@ EOF
     return encode($charset, $dom->to_xml);
 }
 
-sub extract_propeties {
+sub extract_schema {
     my ($form, $charset) = @_;
     my $props   = {};
     my @required;
@@ -352,14 +352,13 @@ This also detects CSRF.
 
 =head2 CLASS METHODS
 
-=head3 extract_propeties
+=head3 extract_schema
 
-    my ($propeties, $required) = extract_propeties($form_in_strig, $charset)
-    my ($propeties, $required) = extract_propeties($form_in_mojo_dom)
+    my $schema = extract_schema($form_in_strig, $charset)
+    my $schema = extract_schema($form_in_mojo_dom)
 
 Generates a schema out of form string or Mojo::DOM instance. It returns
-propeties containing validation rules in hash ref, and required fields in array
-ref.
+schema in hashref consists of JSON-schema-like properties.
 
 =head3 inject_schema
 
