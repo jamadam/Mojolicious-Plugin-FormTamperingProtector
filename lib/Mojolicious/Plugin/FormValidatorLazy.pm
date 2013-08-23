@@ -135,7 +135,7 @@ sub extract_schema {
         if (! exists $tag->attr->{disabled} && $type ne 'submit' &&
                         $type ne 'image' && $type ne 'checkbox' &&
                         ($type ne 'radio' || exists $tag->attr->{checked})) {
-            push(@required, $name);
+            $props->{$name}->{$TERM_REQUIRED} = Mojo::JSON->true;
         }
             
         my $maxlength = $tag->attr('maxlength');
@@ -154,7 +154,6 @@ sub extract_schema {
     
     return {
         $TERM_PROPERTIES => $props,
-        $TERM_REQUIRED  => [unique_grep(\@required)],
         $TERM_ADD_PROPS => Mojo::JSON->false,
     };
 }
@@ -193,15 +192,15 @@ sub validate {
         }
     }
     
-    for my $required (@{$wrapper->{$TERM_SCHEMA}->{$TERM_REQUIRED}}) {
-        if (! defined $params->param($required)) {
-            return "Field $required is required";
-        }
-    }
-    
     for my $name (keys %$props) {
         
         my @params = $params->param($name);
+        
+        if (($props->{$name}->{$TERM_REQUIRED} || '') eq Mojo::JSON->true) {
+            if (! scalar @params) {
+                return "Field $name is required";
+            }
+        }
         
         if (my $allowed = $props->{$name}->{$TERM_OPTIONS}) {
             for my $given (@params) {
@@ -273,11 +272,6 @@ sub unsign {
             return $signed;
         }
     }
-}
-
-sub unique_grep {
-    my %hash;
-    return grep {!$hash{$_}++} @{$_[0]};
 }
 
 1;
