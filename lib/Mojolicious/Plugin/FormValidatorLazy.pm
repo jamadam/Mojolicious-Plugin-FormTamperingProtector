@@ -132,23 +132,23 @@ sub extract_schema {
             }
         }
         
-        if (! exists $tag->attr->{disabled} && $type ne 'submit' &&
-                        $type ne 'image' && $type ne 'checkbox' &&
+        if (! exists $tag->attr->{disabled}) {
+            if ($type ne 'submit' && $type ne 'image' && $type ne 'checkbox' &&
                         ($type ne 'radio' || exists $tag->attr->{checked})) {
-            $props->{$name}->{$TERM_REQUIRED} = Mojo::JSON->true;
+                $props->{$name}->{$TERM_REQUIRED} = Mojo::JSON->true;
+            }
         }
             
-        my $maxlength = $tag->attr('maxlength');
-        if ($maxlength =~ /./) {
-            $props->{$name}->{$TERM_MAXLENGTH} = $maxlength;
+        if (exists $tag->attr->{maxlength}) {
+            $props->{$name}->{$TERM_MAXLENGTH} = $tag->attr->{maxlength} || 0;
         }
         
         if (exists $tag->attr->{required}) {
             $props->{$name}->{$TERM_MIN_LENGTH} = 1;
         }
         
-        if (my $val = $tag->attr->{pattern}) {
-            $props->{$name}->{$TERM_PATTERN} = $val;
+        if (exists $tag->attr->{pattern}) {
+            $props->{$name}->{$TERM_PATTERN} = $tag->attr->{pattern};
         }
     });
     
