@@ -7,20 +7,10 @@ use Data::Dumper;
 use Mojo::JSON;
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
                                                         b64_decode b64_encode};
+use HTML::ValidationRules::Legacy;
 
-my $TERM_ACTION             = 0;
-my $TERM_SCHEMA             = 1;
-my $TERM_PROPERTIES         = 2;  # 'properties'
-my $TERM_REQUIRED           = 3;  # 'required'
-my $TERM_MAXLENGTH          = 4;  # 'maxLength'
-my $TERM_MIN_LENGTH         = 5;  # 'minLength'
-my $TERM_OPTIONS            = 6;  # 'options'
-my $TERM_PATTERN            = 7;  # 'pattern'
-my $TERM_MIN                = 8;  # 'maximam'
-my $TERM_MAX                = 9;  # 'minimum'
-my $TERM_TYPE               = 10; # 'type'
-my $TERM_ADD_PROPS          = 11; # 'additionalProperties'
-my $TERM_NUMBER             = 12; # 'number'
+our $TERM_ACTION = 0;
+our $TERM_SCHEMA = 1;
 
 my $json = Mojo::JSON->new;
 
@@ -53,7 +43,7 @@ sub register {
                 return $opt->{blackhole}->($c, 'Action attribute has been tampered');
             }
             
-            if (my $err = validate($wrapper->{$TERM_SCHEMA}, $req->params)) {
+            if (my $err = HTML::ValidationRules::Legacy::validate($wrapper->{$TERM_SCHEMA}, $req->params)) {
                 return $opt->{blackhole}->($c, $err);
             }
         }
@@ -62,7 +52,8 @@ sub register {
     $app->hook(after_dispatch => sub {
         my $c = shift;
         
-        if ($c->res->headers->content_type =~ qr{^text/html}) {
+        if ($c->res->headers->content_type =~ qr{^text/html} &&
+                                                $c->res->body =~ qr{<form\b}i) {
             
             my $sessid = $c->session($sess_key);
             
@@ -84,163 +75,28 @@ sub inject {
     if (! ref $html) {
         $html = Mojo::DOM->new($charset ? decode($charset, $html) : $html);
     }
-    
-    for my $action (@$actions) {
-        $html->find(qq{form[action="$action"][method="post"]})->each(sub {
-            my $form    = shift;
-            my $wrapper = sign(serialize({
-                $TERM_ACTION    => $form->attr('action'),
-                $TERM_SCHEMA    => extract($form, $charset),
-            }), $sessid);
-            
-            $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));
+
+    $html->find(qq{form[action][method="post"]})->each(sub {
+        my $form    = shift;
+        my $action  = $form->attr('action');
+        
+        if (! grep {$_ eq $action} @$actions) {
+            return;
+        }
+        
+        my $wrapper = sign(serialize({
+            $TERM_ACTION    => $action,
+            $TERM_SCHEMA    => HTML::ValidationRules::Legacy::extract($form, $charset),
+        }), $sessid);
+        
+        $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));
 <div style="display:none">
     <input type="hidden" name="%s" value="%s">
 </div>
 EOF
-        });
-    }
-    
-    return encode($charset, $html);
-}
-
-sub extract {
-    my ($form, $charset) = @_;
-    my $props   = {};
-    my @required;
-    
-    if (! ref $form) {
-        $form = Mojo::DOM->new($charset ? decode($charset, $form) : $form);
-    }
-    
-    $form->find("*[name]")->each(sub {
-        my $tag = shift;
-        my $type = $tag->attr('type');
-        my $name = $tag->attr('name');
-        $props->{$name} ||= {};
-        
-        if (grep {$_ eq $type} qw{hidden checkbox radio submit image}) {
-            push(@{$props->{$name}->{$TERM_OPTIONS}}, $tag->attr('value'));
-        }
-        
-        if ($tag->type eq 'select') {
-            $tag->find('option')->each(sub {
-                push(@{$props->{$name}->{$TERM_OPTIONS}}, shift->attr('value'));
-            });
-        }
-        
-        if ($type eq 'number') {
-            $props->{$name}->{$TERM_TYPE} = $TERM_NUMBER;
-            if (my $val = $tag->attr->{min}) {
-                $props->{$name}->{$TERM_MIN} = $val;
-            }
-            if (my $val = $tag->attr->{max}) {
-                $props->{$name}->{$TERM_MAX} = $val;
-            }
-        }
-        
-        if (! exists $tag->attr->{disabled}) {
-            if ($type ne 'submit' && $type ne 'image' && $type ne 'checkbox' &&
-                        ($type ne 'radio' || exists $tag->attr->{checked})) {
-                $props->{$name}->{$TERM_REQUIRED} = Mojo::JSON->true;
-            }
-        }
-            
-        if (exists $tag->attr->{maxlength}) {
-            $props->{$name}->{$TERM_MAXLENGTH} = $tag->attr->{maxlength} || 0;
-        }
-        
-        if (exists $tag->attr->{required}) {
-            $props->{$name}->{$TERM_MIN_LENGTH} = 1;
-        }
-        
-        if (exists $tag->attr->{pattern}) {
-            $props->{$name}->{$TERM_PATTERN} = $tag->attr->{pattern};
-        }
     });
     
-    return {
-        $TERM_PROPERTIES => $props,
-        $TERM_ADD_PROPS => Mojo::JSON->false,
-    };
-}
-
-sub validate {
-    my ($schema, $params, $charset) = @_;
-    
-    if (! ref $params) {
-        $params = Mojo::Parameter->new;
-        $params->charset($charset);
-        $params->append($params);
-    }
-    
-    my $props = $schema->{$TERM_PROPERTIES};
-    
-    if (! $schema->{$TERM_ADD_PROPS}) {
-        for my $name ($params->param) {
-            if (! $props->{$name}) {
-                return "Field $name is injected";
-            }
-        }
-    }
-    
-    for my $name (keys %$props) {
-        
-        my @params = $params->param($name);
-        
-        if (($props->{$name}->{$TERM_REQUIRED} || '') eq Mojo::JSON->true) {
-            if (! scalar @params) {
-                return "Field $name is required";
-            }
-        }
-        
-        if (my $allowed = $props->{$name}->{$TERM_OPTIONS}) {
-            for my $given (@params) {
-                if (! grep {$_ eq $given} @$allowed) {
-                    return "Field $name has been tampered";
-                }
-            }
-        }
-        if (exists $props->{$name}->{$TERM_MAXLENGTH}) {
-            for my $given (@params) {
-                if (length($given) > $props->{$name}->{$TERM_MAXLENGTH}) {
-                    return "Field $name is too long";
-                }
-            }
-        }
-        if (defined $props->{$name}->{$TERM_MIN_LENGTH}) {
-            for my $given (@params) {
-                if (length($given) < $props->{$name}->{$TERM_MIN_LENGTH}) {
-                    return "Field $name cannot be empty";
-                }
-            }
-        }
-        if (my $pattern = $props->{$name}->{$TERM_PATTERN}) {
-            for my $given (@params) {
-                if ($given !~ /\A$pattern\Z/) {
-                    return "Field $name not match pattern";
-                }
-            }
-        }
-        if (($props->{$name}->{$TERM_TYPE} || '') eq $TERM_NUMBER) {
-            for my $given (@params) {
-                if ($given !~ /\A[\d\+\-\.]+\Z/) {
-                    return "Field $name not match pattern";
-                }
-                if (my $min = $props->{$name}->{$TERM_MIN}) {
-                    if ($given < $min) {
-                        return "Field $name too low";
-                    }
-                }
-                if (my $max = $props->{$name}->{$TERM_MAX}) {
-                    if ($given > $max) {
-                        return "Field $name too great";
-                    }
-                }
-            }
-        }
-    }
-    return;    
+    return encode($charset, $html);
 }
 
 sub serialize {
@@ -338,14 +194,6 @@ This also detects CSRF.
 
 =head2 CLASS METHODS
 
-=head3 extract
-
-    my $schema = extract($form_in_strig, $charset)
-    my $schema = extract($form_in_mojo_dom)
-
-Generates a schema out of form string or Mojo::DOM instance. It returns
-schema in hashref consists of JSON-schema-like properties.
-
 =head3 inject
 
 Generates a schema strings of form structure for each forms in mojo response
@@ -353,13 +201,6 @@ and inject them into itself.
 
     my $injected = inject($html, $charset,
                                 ['/path1', '/path2'], $token_key, $session_id);
-
-=head3 validate
-
-Validates form data against given schema.
-
-    my $error = validate($params_in_string, $schema, $charset);
-    my $error = validate($params_in_mojo_params, $schema);
 
 =head1 AUTHOR
 

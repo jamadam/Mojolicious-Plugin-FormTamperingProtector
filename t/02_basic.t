@@ -6,19 +6,19 @@ use Data::Dumper;
 use Mojo::Util qw{b64_decode};
 use Mojo::JSON;
 
-my $TERM_ACTION              = 0;
-my $TERM_SCHEMA              = 1;
-my $TERM_PROPERTIES          = 2;  # 'properties'
-my $TERM_REQUIRED            = 3;  # 'required'
-my $TERM_MAXLENGTH           = 4;  # 'maxLength'
-my $TERM_MIN_LENGTH          = 5;  # 'minLength'
-my $TERM_OPTIONS             = 6;  # 'options'
-my $TERM_PATTERN             = 7;  # 'pattern'
-my $TERM_MIN                 = 8;  # 'maximam'
-my $TERM_MAX                 = 9;  # 'minimum'
-my $TERM_TYPE                = 10; # 'type'
-my $TERM_ADD_PROPS           = 11; # 'additionalProperties'
-my $TERM_NUMBER              = 12; # 'number'
+my $TERM_ACTION             = 0;
+my $TERM_SCHEMA             = 1;
+my $TERM_PROPERTIES         = 'properties';
+my $TERM_REQUIRED           = 'required';
+my $TERM_MAXLENGTH          = 'maxLength';
+my $TERM_MIN_LENGTH         = 'minLength';
+my $TERM_OPTIONS            = 'options';
+my $TERM_PATTERN            = 'pattern';
+my $TERM_MIN                = 'maximam';
+my $TERM_MAX                = 'minimum';
+my $TERM_TYPE               = 'type';
+my $TERM_ADD_PROPS          = 'additionalProperties';
+my $TERM_NUMBER             = 'number';
 
 my $namespace = 'FormValidatorLazy';
 
