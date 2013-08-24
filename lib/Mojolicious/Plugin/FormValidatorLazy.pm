@@ -71,28 +71,26 @@ sub register {
                 $c->session($sess_key => $sessid);
             }
             
-            $c->res->body(inject_schema(
+            $c->res->body(inject(
                 $c->res->body,
-                $actions,
-                $schema_key,
-                $sessid,
-                $c->res->content->charset,
-            ));
+                $actions, $schema_key, $sessid, $c->res->content->charset));
         }
     });
 }
 
-sub inject_schema {
-    my ($body, $actions, $token_key, $sessid, $charset) = @_;
+sub inject {
+    my ($html, $actions, $token_key, $sessid, $charset) = @_;
     
-    my $dom = Mojo::DOM->new($charset ? decode($charset, $body) : $body);
+    if (! ref $html) {
+        $html = Mojo::DOM->new($charset ? decode($charset, $html) : $html);
+    }
     
     for my $action (@$actions) {
-        $dom->find(qq{form[action="$action"][method="post"]})->each(sub {
+        $html->find(qq{form[action="$action"][method="post"]})->each(sub {
             my $form    = shift;
             my $wrapper = sign(serialize({
                 $TERM_ACTION    => $form->attr('action'),
-                $TERM_SCHEMA    => extract_schema($form, $charset),
+                $TERM_SCHEMA    => extract($form, $charset),
             }), $sessid);
             
             $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));
@@ -103,10 +101,10 @@ EOF
         });
     }
     
-    return encode($charset, $dom->to_xml);
+    return encode($charset, $html);
 }
 
-sub extract_schema {
+sub extract {
     my ($form, $charset) = @_;
     my $props   = {};
     my @required;
@@ -340,20 +338,20 @@ This also detects CSRF.
 
 =head2 CLASS METHODS
 
-=head3 extract_schema
+=head3 extract
 
-    my $schema = extract_schema($form_in_strig, $charset)
-    my $schema = extract_schema($form_in_mojo_dom)
+    my $schema = extract($form_in_strig, $charset)
+    my $schema = extract($form_in_mojo_dom)
 
 Generates a schema out of form string or Mojo::DOM instance. It returns
 schema in hashref consists of JSON-schema-like properties.
 
-=head3 inject_schema
+=head3 inject
 
 Generates a schema strings of form structure for each forms in mojo response
 and inject them into itself.
 
-    my $html = inject_schema($res, $charset,
+    my $injected = inject($html, $charset,
                                 ['/path1', '/path2'], $token_key, $session_id);
 
 =head3 validate
