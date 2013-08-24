@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 182;
+use Test::More tests => 183;
 use Data::Dumper;
 use Mojo::Util qw{b64_decode};
 use Mojo::JSON;
@@ -508,7 +508,7 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{schema}i);
-$t->content_like(qr{not found});
+$t->content_like(qr{missing});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
@@ -518,7 +518,7 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{schema}i);
-$t->content_like(qr{tampered});
+$t->content_like(qr{missing});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
@@ -528,7 +528,7 @@ $t->post_ok('/receptor1' => form => {
 });
 $t->status_is(400);
 $t->content_like(qr{schema}i);
-$t->content_like(qr{tampered});
+$t->content_like(qr{missing});
 
 $t->post_ok('/receptor1' => form => {
     foo => 'fooValue',
@@ -758,7 +758,8 @@ $t->post_ok('/receptor3' => form => {
     "$namespace-schema" => $token14,
 });
 $t->status_is(400);
-$t->content_like(qr{CSRF});
+$t->content_like(qr{schema});
+$t->content_like(qr{missing});
 
 sub extract_session {
     my $t = shift;

@@ -41,10 +41,19 @@ sub register {
         
         if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @$actions) {
             
-            my $token = $req->param($schema_key);
+            my $wrapper = deserialize(unsign(
+                            $req->param($schema_key), $c->session($sess_key)));
+            
             $req->params->remove($schema_key);
             
-            if (my $err = validate($req, $token, $c->session($sess_key))) {
+            if (!$wrapper) {
+                return $opt->{blackhole}->($c, 'Form schema is missing, possible hacking attempt');
+            }
+            if ($req->url->path ne $wrapper->{$TERM_ACTION}) {
+                return $opt->{blackhole}->($c, 'Action attribute has been tampered');
+            }
+            
+            if (my $err = validate($wrapper->{$TERM_SCHEMA}, $req->params)) {
                 return $opt->{blackhole}->($c, $err);
             }
         }
@@ -159,32 +168,17 @@ sub extract_schema {
 }
 
 sub validate {
-    my ($req, $encoded_schema, $sessid) = @_;
+    my ($schema, $params, $charset) = @_;
     
-    if (! $sessid) {
-        return 'CSRF is detected';
+    if (! ref $params) {
+        $params = Mojo::Parameter->new;
+        $params->charset($charset);
+        $params->append($params);
     }
     
-    my $params = $req->params;
-    my $req_path = $req->url->path;
-
-    if (! $encoded_schema) {
-        return 'Schema is not found';
-    }
+    my $props = $schema->{$TERM_PROPERTIES};
     
-    my $wrapper = deserialize(unsign($encoded_schema, $sessid));
-    
-    if (!$wrapper) {
-        return 'Schema has been tampered';
-    }
-    
-    my $props = $wrapper->{$TERM_SCHEMA}->{$TERM_PROPERTIES};
-    
-    if ($req_path ne $wrapper->{$TERM_ACTION}) {
-        return "Action attribute has been tampered";
-    }
-    
-    if (! $wrapper->{$TERM_SCHEMA}->{$TERM_ADD_PROPS}) {
+    if (! $schema->{$TERM_ADD_PROPS}) {
         for my $name ($params->param) {
             if (! $props->{$name}) {
                 return "Field $name is injected";
@@ -248,15 +242,15 @@ sub validate {
             }
         }
     }
-    return;
+    return;    
 }
 
 sub serialize {
-    return b64_encode($json->encode(shift), '');
+    return b64_encode($json->encode(shift || ''), '');
 }
 
 sub deserialize {
-    return $json->decode(b64_decode(shift));
+    return $json->decode(b64_decode(shift || ''));
 }
 
 sub sign {
@@ -266,7 +260,7 @@ sub sign {
 
 sub unsign {
     my ($signed, $secret) = @_;
-    if ($signed =~ s/--([^\-]+)$//) {
+    if ($signed && $secret && $signed =~ s/--([^\-]+)$//) {
         my $sig = $1;
         if (secure_compare($sig, hmac_sha1_sum($signed, $secret))) {
             return $signed;
@@ -364,9 +358,10 @@ and inject them into itself.
 
 =head3 validate
 
-Validates form data of given mojo request by given schema.
+Validates form data against given schema.
 
-    my $error = validate($req, $schema, $session_id);
+    my $error = validate($params_in_string, $schema, $charset);
+    my $error = validate($params_in_mojo_params, $schema);
 
 =head1 AUTHOR
 
