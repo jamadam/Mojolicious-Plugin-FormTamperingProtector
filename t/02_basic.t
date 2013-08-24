@@ -1,7 +1,7 @@
 package Template_Basic;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 181;
+use Test::More tests => 182;
 use Data::Dumper;
 use Mojo::Util qw{b64_decode};
 use Mojo::JSON;
@@ -364,6 +364,28 @@ my $token18 = $t->tx->res->dom->find('form')->[17]->at("input[name=$namespace-sc
             $TERM_PROPERTIES => {
                 foo => {
                     $TERM_OPTIONS => ['fooValue1', 'fooValue2', 'fooValue3'],
+                },
+            },
+        },
+    }, 'right schema';
+}
+
+my $token19 = $t->tx->res->dom->find('form')->[18]->at("input[name=$namespace-schema]")->attr('value');
+{
+    my $schema = deserialize(unsign($token19, $sessid));
+    is_deeply $schema, {
+        $TERM_ACTION    => '/receptor1',
+        $TERM_SCHEMA => {
+            $TERM_ADD_PROPS => Mojo::JSON->false,
+            $TERM_PROPERTIES => {
+                foo => {
+                    $TERM_REQUIRED => Mojo::JSON->true,
+                },
+                bar => {
+                },
+                baz => {
+                    $TERM_REQUIRED => Mojo::JSON->true,
+                    $TERM_MIN_LENGTH => 1,
                 },
             },
         },
