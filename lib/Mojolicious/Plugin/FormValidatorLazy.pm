@@ -108,15 +108,15 @@ sub deserialize {
 }
 
 sub sign {
-    my ($value, $secret) = @_;
-    return $value. '--' . hmac_sha1_sum($value, $secret);
+    my ($value, $session_id) = @_;
+    return $value. '--' . hmac_sha1_sum($value, $session_id);
 }
 
 sub unsign {
-    my ($signed, $secret) = @_;
-    if ($signed && $secret && $signed =~ s/--([^\-]+)$//) {
+    my ($signed, $session_id) = @_;
+    if ($signed && $session_id && $signed =~ s/--([^\-]+)$//) {
         my $sig = $1;
-        if (secure_compare($sig, hmac_sha1_sum($signed, $secret))) {
+        if (secure_compare($sig, hmac_sha1_sum($signed, $session_id))) {
             return $signed;
         }
     }
