@@ -113,11 +113,11 @@ sub sign {
 }
 
 sub unsign {
-    my ($signed, $session_id) = @_;
-    if ($signed && $session_id && $signed =~ s/--([^\-]+)$//) {
+    my ($value, $session_id) = @_;
+    if ($value && $session_id && $value =~ s/--([^\-]+)$//) {
         my $sig = $1;
-        if (secure_compare($sig, hmac_sha1_sum($signed, $session_id))) {
-            return $signed;
+        if (secure_compare($sig, hmac_sha1_sum($value, $session_id))) {
+            return $value;
         }
     }
 }
