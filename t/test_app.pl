@@ -3,7 +3,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Mojolicious::Lite;
 
-my $token_key_prefix = 'form-tampering-protecter';
+my $token_key_prefix = 'FormValidatorLazy';
 
 app->secret('afewfweweuhu');
 
