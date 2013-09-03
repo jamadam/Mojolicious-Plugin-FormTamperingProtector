@@ -7,7 +7,7 @@ use Data::Dumper;
 use Mojo::JSON;
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
                                                         b64_decode b64_encode};
-use HTML::ValidationRules::Legacy;
+use HTML::ValidationRules::Legacy qw{validate extract};
 
 our $TERM_ACTION = 0;
 our $TERM_SCHEMA = 1;
@@ -45,7 +45,7 @@ sub register {
                 return $opt->{blackhole}->($c, 'Action attribute has been tampered');
             }
             
-            if (my $err = HTML::ValidationRules::Legacy::validate($wrapper->{$TERM_SCHEMA}, $req->params)) {
+            if (my $err = validate($wrapper->{$TERM_SCHEMA}, $req->params)) {
                 return $opt->{blackhole}->($c, $err);
             }
         }
@@ -92,7 +92,7 @@ sub inject {
         
         my $wrapper = sign(serialize({
             $TERM_ACTION    => $action,
-            $TERM_SCHEMA    => HTML::ValidationRules::Legacy::extract($form, $charset),
+            $TERM_SCHEMA    => extract($form, $charset),
         }), $secret);
         
         $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));

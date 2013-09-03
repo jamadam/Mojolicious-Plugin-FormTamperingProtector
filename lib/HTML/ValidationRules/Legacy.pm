@@ -1,9 +1,11 @@
 package HTML::ValidationRules::Legacy;
 use strict;
 use warnings;
-use Mojo::Base -base;
+use Mojo::Base 'Exporter';
 use Mojo::JSON;
 use Mojo::Util qw{decode};
+
+our @EXPORT_OK = qw(extract validate),
 
 our $TERM_PROPERTIES         = 'properties';
 our $TERM_REQUIRED           = 'required';
