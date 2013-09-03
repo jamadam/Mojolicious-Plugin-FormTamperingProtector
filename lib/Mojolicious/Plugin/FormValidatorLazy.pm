@@ -32,7 +32,9 @@ sub register {
         if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @$actions) {
             
             my $wrapper = deserialize(unsign(
-                            $req->param($schema_key), $c->session($sess_key)));
+                $req->param($schema_key),
+                ($c->session($sess_key) || ''). $app->secret
+            ));
             
             $req->params->remove($schema_key);
             
@@ -64,13 +66,17 @@ sub register {
             
             $c->res->body(inject(
                 $c->res->body,
-                $actions, $schema_key, $sessid, $c->res->content->charset));
+                $actions,
+                $schema_key,
+                $sessid. $app->secret,
+                $c->res->content->charset)
+            );
         }
     });
 }
 
 sub inject {
-    my ($html, $actions, $token_key, $sessid, $charset) = @_;
+    my ($html, $actions, $token_key, $secret, $charset) = @_;
     
     if (! ref $html) {
         $html = Mojo::DOM->new($charset ? decode($charset, $html) : $html);
@@ -87,7 +93,7 @@ sub inject {
         my $wrapper = sign(serialize({
             $TERM_ACTION    => $action,
             $TERM_SCHEMA    => HTML::ValidationRules::Legacy::extract($form, $charset),
-        }), $sessid);
+        }), $secret);
         
         $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));
 <div style="display:none">
@@ -108,15 +114,15 @@ sub deserialize {
 }
 
 sub sign {
-    my ($value, $session_id) = @_;
-    return $value. '--' . hmac_sha1_sum($value, $session_id);
+    my ($value, $secret) = @_;
+    return $value. '--' . hmac_sha1_sum($value, $secret);
 }
 
 sub unsign {
-    my ($value, $session_id) = @_;
-    if ($value && $session_id && $value =~ s/--([^\-]+)$//) {
+    my ($value, $secret) = @_;
+    if ($value && $secret && $value =~ s/--([^\-]+)$//) {
         my $sig = $1;
-        if (secure_compare($sig, hmac_sha1_sum($value, $session_id))) {
+        if (secure_compare($sig, hmac_sha1_sum($value, $secret))) {
             return $value;
         }
     }
