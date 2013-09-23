@@ -4,6 +4,8 @@ use warnings;
 use Mojo::Base 'Exporter';
 use Mojo::JSON;
 use Mojo::Util qw{decode};
+use Mojo::Parameters;
+use Scalar::Util qw(blessed);
 
 our @EXPORT_OK = qw(extract validate),
 
@@ -83,10 +85,15 @@ sub extract {
 sub validate {
     my ($schema, $params, $charset) = @_;
     
-    if (! ref $params) {
-        $params = Mojo::Parameter->new;
-        $params->charset($charset);
-        $params->append($params);
+    if (! (ref $params && blessed($params) eq 'Mojo::Parameters')) {
+        my $mparams = Mojo::Parameters->new;
+        $mparams->charset($charset);
+        if (ref $params && blessed($params) eq 'Hash::MultiValue') {
+            $mparams->append($params->flatten);
+        } else {
+            $mparams->append($params);
+        }
+        $params = $mparams;
     }
     
     my $props = $schema->{$TERM_PROPERTIES};

@@ -65,7 +65,7 @@ sub call {
         if ($req->path ne $wrapper->{$TERM_ACTION}) {
             return $self->{blackhole}->($env, 'Action attribute has been tampered');
         }
-        
+
         if (my $err = validate($wrapper->{$TERM_SCHEMA}, $params)) {
             return $self->{blackhole}->($env, $err);
         }
@@ -85,7 +85,7 @@ sub call {
             
             if (! $sessid) {
                 $sessid = hmac_sha1_sum(time(). {}. rand(), $$);
-                $session->{$sess_key} = sign($sessid, $self->secret);
+                $session->{$sess_key} = $sessid;
             }
             
             return sub {
@@ -94,8 +94,7 @@ sub call {
                         $body_chunk,
                         $actions,
                         $schema_key,
-                        $sessid.
-                        $self->secret,
+                        $sessid. $self->secret,
                         $charset);
                     return $body_chunk;
                 }
