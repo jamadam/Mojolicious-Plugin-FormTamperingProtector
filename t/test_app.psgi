@@ -6,7 +6,7 @@ use Plack::Builder;
 
 my $token_key_prefix = 'FormValidatorLazy';
 
-app->secret('afewfweweuhu');
+app->secret('afewfweweuhu2');
 
 get '/test1' => sub {
     shift->render('test1');
@@ -21,10 +21,11 @@ post '/receptor2' => sub {
 };
 
 builder {
+    enable 'Session';
     enable 'Plack::Middleware::FormValidatorLazy',
         namespace => $token_key_prefix,
         action => '/receptor1',
-        secret => 'wegihio4t92u90k',
+        secret => 'afewfweweuhu',
         blackhole => sub {
             my ($env, $err) = @_;
             return [

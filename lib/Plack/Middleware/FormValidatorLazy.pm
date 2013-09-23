@@ -6,7 +6,7 @@ use Data::Dumper;
 use Mojo::JSON;
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
                                                         b64_decode b64_encode};
-use HTML::ValidationRules::Legacy;
+use HTML::ValidationRules::Legacy qw{validate extract};
 use Plack::Util::Accessor qw(header_get namespace action secret);
 use Plack::Request;
 use Plack::Response;
@@ -35,41 +35,28 @@ sub prepare_app {
 ### ---
 sub call {
     my($self, $env) = @_;
-    warn Dumper($env);
-    my $req = Mojo::Message::Request->new->parse($env);
-    my $req2 = Plack::Request->new($env);
+
+    my $session = $env->{'psgix.session'};
+    if(not $session) {
+        die "CSRFBlock needs Session.";
+    }
     
-    if ($req->method eq 'POST' && grep {$_ eq $req->url->path} @$actions) {
+    my $req = Plack::Request->new($env);
+    
+    if ($req->method eq 'POST' && grep {$_ eq $req->path_info} @$actions) {
         
         if (! $env->{'psgix.input.buffered'}) {
-            # TODO 
+            # have TODO something?
         }
         
-        warn $req2->body;
-        
-=test
-        my $input = $env->{'psgi.input'};
-        $input->seek(0, 0);
-        my $buf = '';
-        my $cl = $env->{CONTENT_LENGTH};
-        while (my $l = $input->read(my $chunk, $cl < 131072 ? $cl : 131072)) {
-            $cl -= $l;
-            if ($l) {
-                $buf .= $chunk;
-            }
-        }
-        $input->seek(0,0);
-        warn $buf;
-        #---------
-=cut
-
+        my $params = $req->body_parameters;
         
         my $wrapper = deserialize(unsign(
-            $req->params($schema_key),
-            unsign($req->cookie($sess_key)->value, $self->secret)
+            $params->{$schema_key},
+            ($session->{$sess_key} || ''). $self->secret
         ));
         
-        $req->params->remove($schema_key);
+        $params->remove($schema_key);
         
         if (!$wrapper) {
             return $self->{blackhole}->($env, 'Form schema is missing, possible hacking attempt');
@@ -79,7 +66,7 @@ sub call {
             return $self->{blackhole}->($env, 'Action attribute has been tampered');
         }
         
-        if (my $err = HTML::ValidationRules::Legacy::validate($wrapper->{$TERM_SCHEMA}, $req->params)) {
+        if (my $err = validate($wrapper->{$TERM_SCHEMA}, $params)) {
             return $self->{blackhole}->($env, $err);
         }
     }
@@ -94,17 +81,22 @@ sub call {
                                                     ) {
             my $charset = $1;
             
-            my $sessid = unsign($req->cookie($sess_key), $self->secret);
+            my $sessid = unsign($session->{$sess_key}, $self->secret);
             
             if (! $sessid) {
                 $sessid = hmac_sha1_sum(time(). {}. rand(), $$);
-                set_cookie($res, $sess_key, sign($sessid, $self->secret));
+                $session->{$sess_key} = sign($sessid, $self->secret);
             }
             
             return sub {
                 if (my $body_chunk = shift) {
                     $body_chunk = inject(
-                        $body_chunk, $actions, $schema_key, $sessid, $charset);
+                        $body_chunk,
+                        $actions,
+                        $schema_key,
+                        $sessid.
+                        $self->secret,
+                        $charset);
                     return $body_chunk;
                 }
             };
@@ -112,17 +104,8 @@ sub call {
     });
 }
 
-sub set_cookie {
-    my ($res, $key, $value) = @_;
-    my $response = Plack::Response->new(@$res);
-    $response->cookies->{$key} = {value => $value};
-
-    my $final_r = $response->finalize;
-    $res->[1] = $final_r->[1]; # headers
-}
-
 sub inject {
-    my ($html, $actions, $token_key, $sessid, $charset) = @_;
+    my ($html, $actions, $token_key, $secret, $charset) = @_;
     
     if (! ref $html) {
         $html = Mojo::DOM->new($charset ? decode($charset, $html) : $html);
@@ -138,8 +121,8 @@ sub inject {
         
         my $wrapper = sign(serialize({
             $TERM_ACTION    => $action,
-            $TERM_SCHEMA    => HTML::ValidationRules::Legacy::extract($form, $charset),
-        }), $sessid);
+            $TERM_SCHEMA    => extract($form, $charset),
+        }), $secret);
         
         $form->append_content(sprintf(<<"EOF", $token_key, xml_escape $wrapper));
 <div style="display:none">
@@ -160,17 +143,15 @@ sub deserialize {
 }
 
 sub sign {
-    my ($value, $session_id) = @_;
-    warn $session_id;
-    return $value. '--' . hmac_sha1_sum($value, $session_id);
+    my ($value, $secret) = @_;
+    return $value. '--' . hmac_sha1_sum($value, $secret);
 }
 
 sub unsign {
-    my ($value, $session_id) = @_;
-    warn $session_id;
-    if ($value && $session_id && $value =~ s/--([^\-]+)$//) {
+    my ($value, $secret) = @_;
+    if ($value && $secret && $value =~ s/--([^\-]+)$//) {
         my $sig = $1;
-        if (secure_compare($sig, hmac_sha1_sum($value, $session_id))) {
+        if (secure_compare($sig, hmac_sha1_sum($value, $secret))) {
             return $value;
         }
     }
