@@ -75,7 +75,7 @@ my $sessid = extract_session($t)->{$namespace. '-sessid'};
 
 my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token, $sessid. app->secret));
+    my $schema = deserialize(unsign($token, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -107,7 +107,7 @@ my $token = $t->tx->res->dom->find('form')->[0]->at("input[name=$namespace-schem
 
 my $token2 = $t->tx->res->dom->find('form')->[1]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token2, $sessid. app->secret));
+    my $schema = deserialize(unsign($token2, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -126,7 +126,7 @@ is $token3, undef;
 
 my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token4, $sessid. app->secret));
+    my $schema = deserialize(unsign($token4, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -142,7 +142,7 @@ my $token4 = $t->tx->res->dom->find('form')->[3]->at("input[name=$namespace-sche
 
 my $token5 = $t->tx->res->dom->find('form')->[4]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token5, $sessid. app->secret));
+    my $schema = deserialize(unsign($token5, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -161,7 +161,7 @@ is $token6, undef;
 
 my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token7, $sessid. app->secret));
+    my $schema = deserialize(unsign($token7, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -178,7 +178,7 @@ my $token7 = $t->tx->res->dom->find('form')->[6]->at("input[name=$namespace-sche
 
 my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token8, $sessid. app->secret));
+    my $schema = deserialize(unsign($token8, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -202,7 +202,7 @@ my $token8 = $t->tx->res->dom->find('form')->[7]->at("input[name=$namespace-sche
 
 my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token9, $sessid. app->secret));
+    my $schema = deserialize(unsign($token9, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -219,7 +219,7 @@ my $token9 = $t->tx->res->dom->find('form')->[8]->at("input[name=$namespace-sche
 
 my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token10, $sessid. app->secret));
+    my $schema = deserialize(unsign($token10, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION   => '/receptor1',
         $TERM_SCHEMA => {
@@ -236,7 +236,7 @@ my $token10 = $t->tx->res->dom->find('form')->[9]->at("input[name=$namespace-sch
 
 my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token11, $sessid. app->secret));
+    my $schema = deserialize(unsign($token11, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -255,7 +255,7 @@ my $token11 = $t->tx->res->dom->find('form')->[10]->at("input[name=$namespace-sc
 
 my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token12, $sessid. app->secret));
+    my $schema = deserialize(unsign($token12, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -272,7 +272,7 @@ my $token12 = $t->tx->res->dom->find('form')->[11]->at("input[name=$namespace-sc
 
 my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token13, $sessid. app->secret));
+    my $schema = deserialize(unsign($token13, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -291,7 +291,7 @@ my $token13 = $t->tx->res->dom->find('form')->[12]->at("input[name=$namespace-sc
 
 my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token14, $sessid. app->secret));
+    my $schema = deserialize(unsign($token14, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor3',
         $TERM_SCHEMA => {
@@ -303,7 +303,7 @@ my $token14 = $t->tx->res->dom->find('form')->[13]->at("input[name=$namespace-sc
 
 my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token15, $sessid. app->secret));
+    my $schema = deserialize(unsign($token15, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -322,7 +322,7 @@ my $token15 = $t->tx->res->dom->find('form')->[14]->at("input[name=$namespace-sc
 
 my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token16, $sessid. app->secret));
+    my $schema = deserialize(unsign($token16, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -339,7 +339,7 @@ my $token16 = $t->tx->res->dom->find('form')->[15]->at("input[name=$namespace-sc
 
 my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token17, $sessid. app->secret));
+    my $schema = deserialize(unsign($token17, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -356,7 +356,7 @@ my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-sc
 
 my $token18 = $t->tx->res->dom->find('form')->[17]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token18, $sessid. app->secret));
+    my $schema = deserialize(unsign($token18, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {
@@ -372,7 +372,7 @@ my $token18 = $t->tx->res->dom->find('form')->[17]->at("input[name=$namespace-sc
 
 my $token19 = $t->tx->res->dom->find('form')->[18]->at("input[name=$namespace-schema]")->attr('value');
 {
-    my $schema = deserialize(unsign($token19, $sessid. app->secret));
+    my $schema = deserialize(unsign($token19, $sessid. app->secrets->[0]));
     is_deeply $schema, {
         $TERM_ACTION    => '/receptor1',
         $TERM_SCHEMA => {

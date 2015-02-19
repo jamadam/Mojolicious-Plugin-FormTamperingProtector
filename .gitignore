@@ -11,3 +11,4 @@ Makefile*
 pm_to_blib
 *bak
 *.gz
+*.komodoproject

@@ -5,7 +5,7 @@ use Mojolicious::Lite;
 
 my $token_key_prefix = 'FormValidatorLazy';
 
-app->secret('afewfweweuhu');
+app->secrets(['afewfweweuhu']);
 
 plugin form_validator_lazy => {
     namespace => $token_key_prefix,
