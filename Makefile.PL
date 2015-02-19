@@ -9,6 +9,7 @@ my %params = (
     ABSTRACT_FROM => 'lib/Mojolicious/Plugin/FormValidatorLazy.pm',
     LICENSE       => 'perl',
     PREREQ_PM     => {
+        'Mojolicious' => '5.79',
     },
     BUILD_REQUIRES => {
         'Test::More'            => '0.47',

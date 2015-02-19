@@ -4,15 +4,13 @@ use warnings;
 use Mojo::Base 'Mojolicious::Plugin';
 our $VERSION = '0.01';
 use Data::Dumper;
-use Mojo::JSON;
+use Mojo::JSON qw(decode_json encode_json);
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
                                                         b64_decode b64_encode};
 use HTML::ValidationRules::Legacy qw{validate extract};
 
 our $TERM_ACTION = 0;
 our $TERM_SCHEMA = 1;
-
-my $json = Mojo::JSON->new;
 
 ### ---
 ### register
@@ -106,11 +104,11 @@ EOF
 }
 
 sub serialize {
-    return b64_encode($json->encode(shift || ''), '');
+    return b64_encode(encode_json(shift || '') || '', '');
 }
 
 sub deserialize {
-    return $json->decode(b64_decode(shift || ''));
+    return decode_json(b64_decode(shift || return ''));
 }
 
 sub sign {

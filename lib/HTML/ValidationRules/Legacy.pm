@@ -32,7 +32,7 @@ sub extract {
     
     $form->find("*[name]")->each(sub {
         my $tag = shift;
-        my $type = $tag->attr('type');
+        my $type = $tag->attr('type') || '';
         my $name = $tag->attr('name');
         $props->{$name} ||= {};
         
@@ -107,8 +107,7 @@ sub validate {
     }
     
     for my $name (keys %$props) {
-        
-        my @params = $params->param($name);
+        my @params = grep {defined $_} $params->param($name);
         
         if (($props->{$name}->{$TERM_REQUIRED} || '') eq Mojo::JSON->true) {
             if (! scalar @params) {
