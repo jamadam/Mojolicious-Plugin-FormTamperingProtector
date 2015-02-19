@@ -37,10 +37,12 @@ sub register {
             $req->params->remove($schema_key);
             
             if (!$wrapper) {
-                return $opt->{blackhole}->($c, 'Form schema is missing, possible hacking attempt');
+                return $opt->{blackhole}->($c,
+                            'Form schema is missing, possible hacking attempt');
             }
             if ($req->url->path ne $wrapper->{$TERM_ACTION}) {
-                return $opt->{blackhole}->($c, 'Action attribute has been tampered');
+                return $opt->{blackhole}->($c,
+                                        'Action attribute has been tampered');
             }
             
             if (my $err = validate($wrapper->{$TERM_SCHEMA}, $req->params)) {
@@ -84,9 +86,7 @@ sub inject {
         my $form    = shift;
         my $action  = $form->attr('action');
         
-        if (! grep {$_ eq $action} @$actions) {
-            return;
-        }
+        return if (! grep {$_ eq $action} @$actions);
         
         my $wrapper = sign(serialize({
             $TERM_ACTION    => $action,
@@ -120,9 +120,7 @@ sub unsign {
     my ($value, $secret) = @_;
     if ($value && $secret && $value =~ s/--([^\-]+)$//) {
         my $sig = $1;
-        if (secure_compare($sig, hmac_sha1_sum($value, $secret))) {
-            return $value;
-        }
+        return $value if (secure_compare($sig, hmac_sha1_sum($value, $secret)));
     }
 }
 
