@@ -1,11 +1,11 @@
-package Template_Basic;
+use strict;
+use warnings;
+use utf8;
 use Test::Mojo;
 use Mojolicious::Lite;
-use Test::More tests => 187;
-use Data::Dumper;
-use Mojo::JSON qw(decode_json encode_json);
+use Test::More tests => 179;
+use Mojo::JSON qw(decode_json);
 use Mojo::Util qw{hmac_sha1_sum b64_decode};
-use Mojo::JSON;
 
 my $TERM_ACTION             = 0;
 my $TERM_SCHEMA             = 1;
@@ -56,15 +56,6 @@ post '/receptor3' => sub {
     *{__PACKAGE__. '::serialize'} = \&Mojolicious::Plugin::FormValidatorLazy::serialize;
     *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormValidatorLazy::unsign;
 }
-
-is_deeply deserialize(serialize(["'"])), ["'"];
-is_deeply deserialize(serialize(["/"])), ["/"];
-is_deeply deserialize(serialize(["\/"])), ["\/"];
-is_deeply deserialize(serialize(["\""])), ["\""];
-is_deeply deserialize(serialize(["\\\""])), ["\\\""];
-is_deeply deserialize(serialize(["\\\/"])), ["\\\/"];
-is_deeply deserialize(serialize(["\/\/"])), ["\/\/"];
-is_deeply deserialize(serialize(["やったー"])), ["やったー"];
 
 my $t = Test::Mojo->new;
 my $dom;
@@ -790,7 +781,5 @@ sub extract_session {
     my $session = decode_json(b64_decode $value);
     return $session;
 }
-
-1;
 
 __END__

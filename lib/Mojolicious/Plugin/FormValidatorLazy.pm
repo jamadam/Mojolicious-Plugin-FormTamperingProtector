@@ -104,11 +104,11 @@ EOF
 }
 
 sub serialize {
-    return b64_encode(encode_json(shift || '') || '', '');
+    return b64_encode(encode_json(shift // return), '');
 }
 
 sub deserialize {
-    return decode_json(b64_decode(shift || return ''));
+    return decode_json(b64_decode(shift // return));
 }
 
 sub sign {
@@ -122,6 +122,7 @@ sub unsign {
         my $sig = $1;
         return $value if (secure_compare($sig, hmac_sha1_sum($value, $secret)));
     }
+    return;
 }
 
 1;
