@@ -17,7 +17,14 @@ my %params = (
     },
     META_MERGE => {
         resources => {
-            repository => '',
+            repository => {
+                type => 'git',
+                web  => 'https://github.com/jamadam/Mojolicious-Plugin-FormValidatorLazy',
+                url  => 'https://github.com/jamadam/Mojolicious-Plugin-FormValidatorLazy.git',
+            },
+            bugtracker => {
+                web  => 'https://github.com/jamadam/Mojolicious-Plugin-FormValidatorLazy/issues',
+            },
         },
     },
     test => {TESTS => 't/*.t t/*/*.t'},
