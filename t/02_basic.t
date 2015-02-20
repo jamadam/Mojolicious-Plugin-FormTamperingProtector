@@ -339,7 +339,6 @@ my $token17 = $t->tx->res->dom->find('form')->[16]->at("input[name=$namespace-sc
             $TERM_PROPERTIES => {
                 foo => {
                     $TERM_OPTIONS => ['やったー'],
-                    $TERM_REQUIRED => Mojo::JSON->true,
                 },
             },
         },
