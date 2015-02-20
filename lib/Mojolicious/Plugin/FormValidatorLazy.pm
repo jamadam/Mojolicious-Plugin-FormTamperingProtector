@@ -195,6 +195,12 @@ This also detects CSRF.
 
 =back
 
+=head2 EXAMPLE
+
+Run t/test_app.pl and try to attack the forms.
+
+    ./t/test_app.pl daemon
+
 =head2 CLASS METHODS
 
 =head3 inject
