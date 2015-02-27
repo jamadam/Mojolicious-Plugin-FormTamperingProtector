@@ -40,7 +40,7 @@ sub extract {
             push(@{$props->{$name}->{$TERM_OPTIONS}}, $tag->attr('value'));
         }
         
-        if ($tag->type eq 'select') {
+        if ($tag->tag eq 'select') {
             $tag->find('option')->each(sub {
                 push(@{$props->{$name}->{$TERM_OPTIONS}}, shift->attr('value'));
             });
@@ -99,7 +99,7 @@ sub validate {
     my $props = $schema->{$TERM_PROPERTIES};
     
     if (! $schema->{$TERM_ADD_PROPS}) {
-        for my $name ($params->param) {
+        for my $name (@{$params->names}) {
             return "Field $name is injected" if (! $props->{$name});
         }
     }
