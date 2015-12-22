@@ -2,7 +2,7 @@ package Mojolicious::Plugin::FormValidatorLazy;
 use strict;
 use warnings;
 use Mojo::Base 'Mojolicious::Plugin';
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 use Data::Dumper;
 use Mojo::JSON qw(decode_json encode_json);
 use Mojo::Util qw{encode decode xml_escape hmac_sha1_sum secure_compare
