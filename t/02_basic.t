@@ -21,9 +21,9 @@ my $TERM_TYPE               = 'type';
 my $TERM_ADD_PROPS          = 'additionalProperties';
 my $TERM_NUMBER             = 'number';
 
-my $namespace = 'FormValidatorLazy';
+my $namespace = 'FormTamperingProtector';
 
-plugin form_validator_lazy => {
+plugin form_tampering_protector => {
     namespace => $namespace,
     action => ['/receptor1', '/receptor3'],
     blackhole => sub {
@@ -52,9 +52,9 @@ post '/receptor3' => sub {
 
 {
     no strict 'refs';
-    *{__PACKAGE__. '::deserialize'} = \&Mojolicious::Plugin::FormValidatorLazy::deserialize;
-    *{__PACKAGE__. '::serialize'} = \&Mojolicious::Plugin::FormValidatorLazy::serialize;
-    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormValidatorLazy::unsign;
+    *{__PACKAGE__. '::deserialize'} = \&Mojolicious::Plugin::FormTamperingProtector::deserialize;
+    *{__PACKAGE__. '::serialize'} = \&Mojolicious::Plugin::FormTamperingProtector::serialize;
+    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormTamperingProtector::unsign;
 }
 
 my $t = Test::Mojo->new;

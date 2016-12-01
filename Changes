@@ -1,4 +1,7 @@
-Revision history for Mojolicious::Plugin::FormValidatorLazy
+Revision history for Mojolicious::Plugin::FormTamperingProtector
+
+0.04 2016/12/01
+  - Renamed plugin from M::P::FormValidatorLazy.
 
 0.03 2015/12/22
   - Updated dependent version of mojo to v6.38

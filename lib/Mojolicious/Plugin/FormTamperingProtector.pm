@@ -1,4 +1,4 @@
-package Mojolicious::Plugin::FormValidatorLazy;
+package Mojolicious::Plugin::FormTamperingProtector;
 use strict;
 use warnings;
 use Mojo::Base 'Mojolicious::Plugin';
@@ -131,12 +131,12 @@ __END__
 
 =head1 NAME
 
-Mojolicious::Plugin::FormValidatorLazy - FormValidatorLazy
+Mojolicious::Plugin::FormTamperingProtector - FormTamperingProtector
 
 =head1 SYNOPSIS
 
-    plugin form_validator_lazy => {
-        namespace => 'form_validator_lazy',
+    plugin form_tampering_protector => {
+        namespace => 'form_tampering_protector',
         action => ['/receptor1'],
         blackhole => sub {
             my ($c, $error) = @_;
@@ -151,8 +151,8 @@ Mojolicious::Plugin::FormValidatorLazy - FormValidatorLazy
 B<This software is considered to be alpha quality and isn't recommended for
 regular usage.>
 
-Mojolicious::Plugin::FormValidatorLazy is a Mojolicious plugin for validating
-post data with auto-generated validation rules out of original forms.
+Mojolicious::Plugin::FormTamperingProtector is a Mojolicious plugin for
+validating post data with auto-generated validation rules out of original forms.
 It analizes the HTML forms before sending them to client, generate the schema,
 inject it into original forms within a hidden fields so the plugin can detect
 the schema when a post request comes.

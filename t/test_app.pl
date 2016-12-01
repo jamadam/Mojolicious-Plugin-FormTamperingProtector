@@ -3,11 +3,11 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Mojolicious::Lite;
 
-my $token_key_prefix = 'FormValidatorLazy';
+my $token_key_prefix = 'FormTamperingProtector';
 
 app->secrets(['afewfweweuhu']);
 
-plugin form_validator_lazy => {
+plugin form_tampering_protector => {
     namespace => $token_key_prefix,
     action => '/receptor1',
     blackhole => sub {

@@ -3,10 +3,10 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %params = (
-    NAME          => 'Mojolicious::Plugin::FormValidatorLazy',
+    NAME          => 'Mojolicious::Plugin::FormTamperingProtector',
     AUTHOR        => 'Sugama Keita <sugama@jamadam.com>',
-    VERSION_FROM  => 'lib/Mojolicious/Plugin/FormValidatorLazy.pm',
-    ABSTRACT_FROM => 'lib/Mojolicious/Plugin/FormValidatorLazy.pm',
+    VERSION_FROM  => 'lib/Mojolicious/Plugin/FormTamperingProtector.pm',
+    ABSTRACT_FROM => 'lib/Mojolicious/Plugin/FormTamperingProtector.pm',
     LICENSE       => 'perl',
     PREREQ_PM     => {
         'Mojolicious' => '6.38',
@@ -19,11 +19,11 @@ my %params = (
         resources => {
             repository => {
                 type => 'git',
-                web  => 'https://github.com/jamadam/Mojolicious-Plugin-FormValidatorLazy',
-                url  => 'https://github.com/jamadam/Mojolicious-Plugin-FormValidatorLazy.git',
+                web  => 'https://github.com/jamadam/Mojolicious-Plugin-FormTamperingProtector',
+                url  => 'https://github.com/jamadam/Mojolicious-Plugin-FormTamperingProtector.git',
             },
             bugtracker => {
-                web  => 'https://github.com/jamadam/Mojolicious-Plugin-FormValidatorLazy/issues',
+                web  => 'https://github.com/jamadam/Mojolicious-Plugin-FormTamperingProtector/issues',
             },
         },
     },

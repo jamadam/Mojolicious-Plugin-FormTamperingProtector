@@ -2,14 +2,14 @@ use strict;
 use warnings;
 use utf8;
 use Test::More tests => 26;
-use Mojolicious::Plugin::FormValidatorLazy;
+use Mojolicious::Plugin::FormTamperingProtector;
 
 {
     no strict 'refs';
-    *{__PACKAGE__. '::deserialize'} = \&Mojolicious::Plugin::FormValidatorLazy::deserialize;
-    *{__PACKAGE__. '::serialize'} = \&Mojolicious::Plugin::FormValidatorLazy::serialize;
-    *{__PACKAGE__. '::sign'} = \&Mojolicious::Plugin::FormValidatorLazy::sign;
-    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormValidatorLazy::unsign;
+    *{__PACKAGE__. '::deserialize'} = \&Mojolicious::Plugin::FormTamperingProtector::deserialize;
+    *{__PACKAGE__. '::serialize'} = \&Mojolicious::Plugin::FormTamperingProtector::serialize;
+    *{__PACKAGE__. '::sign'} = \&Mojolicious::Plugin::FormTamperingProtector::sign;
+    *{__PACKAGE__. '::unsign'} = \&Mojolicious::Plugin::FormTamperingProtector::unsign;
 }
 
 is sign(1, 'secret'), '1--51a1e4d3cd5e8b890b9cad1f46ba51e711c095d4', 'right value';
